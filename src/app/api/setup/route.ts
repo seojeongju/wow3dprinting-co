@@ -7,8 +7,17 @@ export const runtime = 'edge';
 
 export async function GET() {
   try {
+    const { env } = getRequestContext() as any;
+    
+    // 바인딩 존재 여부 체크 (디버깅용)
+    if (!env || !env.DB) {
+      return NextResponse.json({ success: false, error: 'Database binding (DB) is missing in Cloudflare Pages settings.' }, { status: 500 });
+    }
+    if (!env.MEDIA) {
+      return NextResponse.json({ success: false, error: 'R2 bucket binding (MEDIA) is missing in Cloudflare Pages settings.' }, { status: 500 });
+    }
+
     const db = getDb();
-    const { env } = getRequestContext();
 
     // 1. 카테고리 초기 데이터 삽입 (Seed)
     const seedCategories = [
