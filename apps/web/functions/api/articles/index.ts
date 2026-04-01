@@ -18,7 +18,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (request.method === "GET") {
     const { results } = await env.DB.prepare(
-      "SELECT id, slug, title, summary, status, published_at, created_at, updated_at FROM articles ORDER BY COALESCE(published_at, created_at) DESC LIMIT 100"
+      "SELECT id, slug, title, summary, status, hero_image_r2_key, published_at, created_at, updated_at FROM articles WHERE status = 'published' ORDER BY COALESCE(published_at, created_at) DESC LIMIT 100"
     ).all();
     return json({ items: results });
   }
