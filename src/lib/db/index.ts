@@ -3,10 +3,14 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import * as schema from './schema';
 
 export const getDb = () => {
-  const { env } = getRequestContext() as any;
-  if (!env || !env.DB) {
-    throw new Error('Database binding "DB" is missing. Please check Cloudflare Pages settings.');
+  const context = getRequestContext();
+  
+  if (!context || !context.env || !context.env.DB) {
+    // 런타임에서 바인딩을 찾을 수 없는 경우 명시적 에러 발생 (상위 try-catch에서 잡히도록 함)
+    throw new Error('Cloudflare D1 Database binding "DB" not found. Please verify bindings and redeploy.');
   }
+  
+  const { env } = context as any;
   return drizzle(env.DB, { schema });
 };
 
