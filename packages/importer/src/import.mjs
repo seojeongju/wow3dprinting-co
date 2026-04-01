@@ -232,11 +232,13 @@ async function run() {
     };
   });
   const pages = pageResults.filter((x) => x.type === "page");
-  const redirects = pageResults.map((x) => ({
-    source_path: new URL(x.source_url).pathname || "/",
-    target_path: x.type === "article" ? `/news/${x.slug}` : `/${x.slug}`,
-    status_code: 301
-  }));
+  const redirects = pageResults
+    .map((x) => ({
+      source_path: new URL(x.source_url).pathname || "/",
+      target_path: x.type === "article" ? `/news/${x.slug}` : `/${x.slug}`,
+      status_code: 301
+    }))
+    .filter((r) => r.source_path !== "/" && r.source_path !== "");
 
   await writeFile(new URL("./articles.ndjson", OUT_DIR), articles.map((x) => JSON.stringify(x)).join("\n"));
   await writeFile(new URL("./pages.ndjson", OUT_DIR), pages.map((x) => JSON.stringify(x)).join("\n"));

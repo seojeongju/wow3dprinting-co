@@ -22,6 +22,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return context.next();
   }
 
+  // 리다이렉트보다 먼저: 루트·정적 HTML은 항상 public 자산으로 넘긴다(DB에 source_path='/' 가 있으면 홈이 기사로 보내지는 버그 방지)
+  if (path === "/" || path === "/index.html" || path === "/admin.html" || path === "/article.html") {
+    return context.next();
+  }
+
   const redirect = await context.env.DB.prepare(
     "SELECT target_path, status_code FROM redirects WHERE source_path = ?"
   )
@@ -29,10 +34,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .first<{ target_path: string; status_code: number }>();
   if (redirect) {
     return Response.redirect(new URL(redirect.target_path, context.request.url).toString(), redirect.status_code);
-  }
-
-  if (path === "/" || path === "/index.html" || path === "/admin.html" || path === "/article.html") {
-    return context.next();
   }
 
   if (path.startsWith("/news/")) {
