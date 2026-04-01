@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Edit3, Trash2, Save, X, Loader2, Settings, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Edit3, Trash2, Save, X, Loader2, Settings, ArrowLeft, CheckCircle, PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import Image from 'next/image';
@@ -21,9 +21,12 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
     title: article.title,
     content: article.content,
     status: article.status,
+    thumbnailKey: article.thumbnailKey,
   });
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const contentImageInputRef = useRef<HTMLInputElement>(null);
 
   // 텍스트 영역 높이 자동 조절
   useEffect(() => {
@@ -32,6 +35,53 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [isEditing, formData.content]);
+
+  // 자산 업로드 헬퍼
+  const uploadAsset = async (file: File) => {
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    
+    const res = await fetch('/api/admin/assets', {
+      method: 'POST',
+      body: uploadFormData,
+    });
+    
+    if (!res.ok) throw new Error('업로드 실패');
+    return await res.json() as { key: string, url: string };
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    try {
+      const asset = await uploadAsset(file);
+      setFormData(prev => ({ ...prev, thumbnailKey: asset.key }));
+    } catch (err) {
+      alert('이미지 업로드 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleContentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    try {
+      const asset = await uploadAsset(file);
+      const imageMarkdown = `\n![${file.name}](${asset.url})\n`;
+      
+      // 커서 위치에 삽입 로직 (간소화하여 하단 추가)
+      setFormData(prev => ({ ...prev, content: prev.content + imageMarkdown }));
+    } catch (err) {
+      alert('본문 이미지 업로드 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -126,7 +176,12 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
                   onClick={() => {
                     if (confirm('수정 중인 내용을 취소하시겠습니까?')) {
                       setIsEditing(false);
-                      setFormData({ title: article.title, content: article.content, status: article.status });
+                      setFormData({ 
+                        title: article.title, 
+                        content: article.content, 
+                        status: article.status,
+                        thumbnailKey: article.thumbnailKey 
+                      });
                     }
                   }}
                   className="flex items-center gap-2 px-6 py-3 bg-muted text-muted-foreground rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-background transition-all"
@@ -186,27 +241,82 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
         </div>
       </header>
 
-      {/* 기사 섬네일 */}
-      {article.thumbnailKey && (
-        <div className="relative aspect-video mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl">
-          <Image 
-            src={article.thumbnailKey.startsWith('http') ? article.thumbnailKey : `/api/assets/${article.thumbnailKey}`} 
-            alt={formData.title} 
-            fill 
-            className="object-cover" 
-            priority
-            unoptimized={article.thumbnailKey.startsWith('http') || article.thumbnailKey.startsWith('//')}
-          />
+      {/* 기사 섬네일 관리 (지능형 레이아웃) */}
+      <input 
+        type="file" 
+        ref={thumbnailInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleThumbnailUpload} 
+      />
+      
+      {(formData.thumbnailKey || isEditing) && (
+        <div className="relative aspect-video mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl group/thumb bg-muted/30">
+          {formData.thumbnailKey ? (
+            <>
+              <Image 
+                src={formData.thumbnailKey.startsWith('http') ? formData.thumbnailKey : `/api/assets/${formData.thumbnailKey}`} 
+                alt={formData.title} 
+                fill 
+                className="object-cover" 
+                priority
+                unoptimized={formData.thumbnailKey.startsWith('http') || formData.thumbnailKey.startsWith('//')}
+              />
+              {isEditing && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity gap-4 shadow-inner">
+                  <button 
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    className="p-3 bg-white text-black rounded-full hover:scale-110 transition-transform shadow-lg"
+                  >
+                    <Edit3 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => setFormData(prev => ({ ...prev, thumbnailKey: null }))}
+                    className="p-3 bg-destructive text-white rounded-full hover:scale-110 transition-transform shadow-lg"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center border-4 border-dashed border-muted-foreground/10 rounded-[2.5rem]">
+              <button 
+                onClick={() => thumbnailInputRef.current?.click()}
+                className="flex flex-col items-center gap-4 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <PlusCircle className="w-12 h-12 opacity-20" />
+                <span className="font-black uppercase tracking-widest text-[10px] opacity-40">공식 기사 섬네일 추가</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* 본문 에디터 및 본문 렌더링 영역 */}
+      <input 
+        type="file" 
+        ref={contentImageInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleContentImageUpload} 
+      />
+
       <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2rem] prose-img:shadow-xl">
         {isEditing ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-primary opacity-60">
-              <span>본문 마크다운 편집 중</span>
-              <span>입력한 대로 아래에 미리보기가 구성됩니다.</span>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-60">
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>기사 본문 마크다운 편집 중</span>
+              </div>
+              <button
+                onClick={() => contentImageInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 bg-background border text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-muted transition-all active:scale-95 shadow-sm"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-primary" />
+                본문 이미지 추가
+              </button>
             </div>
             <textarea
               ref={textareaRef}

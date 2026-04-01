@@ -26,18 +26,36 @@ export async function PATCH(
 
     const body = await request.json() as any;
     const db = getDb();
+    const context = getRequestContext() as any;
+    const env = context.env;
 
-    // 2. 데이터 업데이트
+    // 2. 기존 기사 정보 조회 (섬네일 변경 확인용)
+    const oldArticle = await db.select().from(articles).where(eq(articles.id, articleId)).get();
+
+    // 3. 데이터 업데이트 준비
     const updateData: any = {
       title: body.title,
       content: body.content,
       status: body.status,
       slug: body.slug,
+      thumbnailKey: body.thumbnailKey, // 섬네일 키 추가
       updatedAt: new Date(),
     };
 
     if (body.status === 'published') {
       updateData.publishedAt = new Date();
+    }
+
+    // 4. 섬네일이 변경되거나 삭제된 경우 기존 R2 자산 삭제
+    if (oldArticle?.thumbnailKey && oldArticle.thumbnailKey !== body.thumbnailKey) {
+      // 외부 URL이 아닌 내부 R2 파일인 경우에만 삭제 시도
+      if (!oldArticle.thumbnailKey.startsWith('http')) {
+        try {
+          await env.MEDIA.delete(oldArticle.thumbnailKey);
+        } catch (r2Error) {
+          console.error('Old Thumbnail Delete Error:', r2Error);
+        }
+      }
     }
 
     await db.update(articles)

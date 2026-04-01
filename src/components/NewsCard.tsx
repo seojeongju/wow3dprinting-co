@@ -63,9 +63,9 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
   
   return (
     <div className={`group relative flex flex-col gap-3 border-b pb-6 last:border-0 md:border-0 md:pb-0 ${compact ? 'flex-row items-start' : ''}`}>
-      <Link href={`/articles/${article.slug}`} className={`block overflow-hidden rounded-lg ${compact ? 'w-24 shrink-0' : 'w-full'}`}>
-        <div className="aspect-video bg-muted relative transition-transform duration-500 group-hover:scale-105">
-            {imageUrl ? (
+      {imageUrl && (
+        <Link href={`/articles/${article.slug}`} className={`block overflow-hidden rounded-lg ${compact ? 'w-24 shrink-0' : 'w-full'}`}>
+          <div className="aspect-video bg-muted relative transition-transform duration-500 group-hover:scale-105">
               <Image 
                 src={imageUrl} 
                 alt={article.title} 
@@ -74,17 +74,10 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
                 priority={priority}
                 unoptimized={!!imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('//'))}
               />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted to-accent/20">
-                <div className="w-8 h-8 opacity-20 mb-2 text-primary/30">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                </div>
-                <span className={`font-black uppercase tracking-[0.3em] text-primary/30 ${compact ? 'text-[6px]' : 'text-[10px]'}`}>이미지 준비 중</span>
-              </div>
-            )}
-        </div>
-      </Link>
-      <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-2'}`}>
+          </div>
+        </Link>
+      )}
+      <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-2'} ${!imageUrl ? 'w-full py-4 px-2' : ''}`}>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
@@ -100,7 +93,7 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
           </h3>
         </Link>
         {!compact && (
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed opacity-85">
+          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed opacity-85 mt-1">
              {excerpt}...
           </p>
         )}
