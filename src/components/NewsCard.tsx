@@ -61,11 +61,10 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
       </Link>
       <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-2'}`}>
         <div className="flex items-center gap-2">
-          {article.category && (
-            <span className="text-[10px] font-black uppercase tracking-tighter text-primary bg-primary/10 px-2 py-0.5 rounded">
-              {article.category.name}
-            </span>
-          )}
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
+            Tech Intelligence
+          </span>
           <span className="text-[10px] font-medium text-muted-foreground border-l pl-2">
             {article.publishedAt ? format(new Date(article.publishedAt), 'yyyy년 M월 d일') : '최근'}
           </span>

@@ -1,11 +1,5 @@
 import Link from 'next/link';
-import { Search, Menu, Cpu, Printer, Radio } from 'lucide-react';
-
-const CATEGORIES = [
-  { name: '인공지능', href: '/category/ai-ml', icon: Cpu },
-  { name: '3D 프린팅', href: '/category/3d-printing', icon: Printer },
-  { name: '로보틱스', href: '/category/robotics', icon: Radio },
-];
+import { Search, Menu, Radio } from 'lucide-react';
 
 export default function Header() {
   return (
@@ -14,11 +8,11 @@ export default function Header() {
         {/* Top bar (Trending/Date) */}
         <div className="hidden border-b py-2 text-xs font-medium md:flex justify-between items-center text-muted-foreground tracking-wider">
           <div className="flex gap-4">
-            <span className="font-bold">주요 소식:</span>
-            <Link href="#" className="hover:text-foreground">차세대 슬라이싱 기술</Link>
-            <Link href="#" className="hover:text-foreground">제너레이티브 디자인 2.0</Link>
+            <span className="font-bold text-primary">WOW3D 미디어:</span>
+            <Link href="/" className="hover:text-foreground">차세대 슬라이싱 기술</Link>
+            <Link href="/" className="hover:text-foreground">제너레이티브 디자인 2.0</Link>
           </div>
-          <div>{new Date().toLocaleDateString('ko-KR', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+          <div className="font-bold">{new Date().toLocaleDateString('ko-KR', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
         </div>
 
         <div className="flex h-16 items-center justify-between py-4">
@@ -28,28 +22,25 @@ export default function Header() {
                 3D<span className="text-secondary-foreground font-light">프린팅</span>타임즈
               </span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-bold tracking-widest">
-              {CATEGORIES.map((cat) => (
-                <Link
-                  key={cat.name}
-                  href={cat.href}
-                  className="transition-colors hover:text-primary flex items-center gap-1.5"
-                >
-                  <cat.icon className="w-3.5 h-3.5" />
-                  {cat.name}
-                </Link>
-              ))}
+            <nav className="hidden md:flex items-center gap-8 text-sm font-black tracking-widest uppercase text-muted-foreground/60">
+              <Link href="/" className="transition-colors hover:text-primary text-primary">
+                최신 기술 뉴스
+              </Link>
+              <Link href="/" className="transition-colors hover:text-primary">
+                칼럼 & 인사이트
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-accent rounded-full transition-colors">
-              <Search className="w-5 h-5" />
+            <button className="p-2 hover:bg-accent rounded-full transition-colors group">
+              <Search className="w-5 h-5 group-hover:text-primary" />
             </button>
             <button className="md:hidden p-2 hover:bg-accent rounded-full transition-colors">
               <Menu className="w-6 h-6" />
             </button>
             <div className="hidden md:block">
-               <Link href="/admin" className="text-xs font-bold bg-primary text-primary-foreground px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
+               <Link href="/admin" className="text-xs font-black bg-primary text-primary-foreground px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                <Radio className="w-3 h-3 animate-pulse" />
                 구독하기
                </Link>
             </div>
