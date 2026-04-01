@@ -11,6 +11,6 @@ export const getDb = () => {
 declare global {
   interface CloudflareEnv {
     DB: D1Database;
-    ASSETS: R2Bucket;
+    MEDIA: R2Bucket;
   }
 }

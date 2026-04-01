@@ -23,8 +23,8 @@ export async function GET() {
     }
 
     // 2. R2 연동 테스트 (간단한 로그 파일)
-    if (env.ASSETS) {
-      await env.ASSETS.put('test-connection.txt', `Initialized at ${new Date().toISOString()}`);
+    if (env.MEDIA) {
+      await env.MEDIA.put('test-connection.txt', `Initialized at ${new Date().toISOString()}`);
     }
 
     // 3. 샘플 기사 (Draft)
