@@ -12,13 +12,14 @@ interface NewsCardProps {
 export default function NewsCard({ article, priority, compact }: NewsCardProps) {
   // 1. 본문에서 유효한 첫 번째 마크다운 이미지 URL 추출 (스페이서, 로고 등 제외)
   const extractValidThumbnail = (content: string) => {
-    const matches = Array.from(content.matchAll(/!\[.*?\]\((.*?)\)/g));
+    // 순수 URL만 캡처하고 뒤에 오는 공백이나 타이틀("title")은 제외하는 정규식
+    const matches = Array.from(content.matchAll(/!\[.*?\]\(([^" \)]+).*?\)/g));
     
     // 섬네일로 부적합한 이미지 키워드
     const excludeKeywords = ['spacer', 'pixel', 'logo', 'icon', 'banner', 'invisible', 'dot.gif', 'loading'];
 
     for (const match of matches) {
-      const url = match[1];
+      let url = match[1]?.trim();
       if (!url) continue;
 
       // 키워드 필터링 (부적합한 이미지는 건너뜀)
@@ -34,13 +35,21 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
   
   // 외부 URL인지 내부 R2 키인지 판별 로직
   const getProcessedImageUrl = (key: string | null, fallback: string | null) => {
-    const rawUrl = key || fallback;
+    let rawUrl = key || fallback;
     if (!rawUrl) return null;
     
-    // http로 시작하면 외부 URL이므로 그대로 반환, 아니면 내부 R2 자산 경로 사용
-    if (rawUrl.startsWith('http') || rawUrl.startsWith('//')) {
+    rawUrl = rawUrl.trim();
+    
+    // 프로토콜 상대 경로(//)는 https:를 붙여 명시화
+    if (rawUrl.startsWith('//')) {
+      return `https:${rawUrl}`;
+    }
+    
+    // http로 시작하면 외부 URL이므로 그대로 반환 (단, s가 붙지 않은 경우에도 허용)
+    if (rawUrl.startsWith('http')) {
       return rawUrl;
     }
+    
     return `/api/assets/${rawUrl}`;
   };
 

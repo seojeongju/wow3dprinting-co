@@ -255,7 +255,12 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
           {formData.thumbnailKey ? (
             <>
               <Image 
-                src={formData.thumbnailKey.startsWith('http') ? formData.thumbnailKey : `/api/assets/${formData.thumbnailKey}`} 
+                src={(() => {
+                  const rawUrl = (formData.thumbnailKey || '').trim();
+                  if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+                  if (rawUrl.startsWith('http')) return rawUrl;
+                  return `/api/assets/${rawUrl}`;
+                })()} 
                 alt={formData.title} 
                 fill 
                 className="object-cover" 
