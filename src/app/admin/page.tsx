@@ -32,7 +32,7 @@ export default function AdminPage() {
     async function loadCategories() {
       try {
         const res = await fetch('/api/categories');
-        const data = await res.json();
+        const data = await res.json() as any;
         if (data.success) {
           setCategories(data.categories);
         } else {
@@ -85,7 +85,7 @@ export default function AdminPage() {
         body: data,
       });
 
-      const result = await res.json();
+      const result = await res.json() as any;
 
       if (res.ok && result.success) {
         setSuccess('기사가 성공적으로 등록되었습니다! 메인 페이지로 이동합니다.');
