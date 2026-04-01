@@ -2,6 +2,8 @@
 
 **정식 작업 경로**: `d:\Program_DEV\wow3dprinting-co` — Cursor에서는 이 폴더를 열어 작업한다.
 
+**원격 저장소**: [github.com/seojeongju/wow3dprinting-co](https://github.com/seojeongju/wow3dprinting-co) (`main` 브랜치)
+
 Cloudflare Pages + D1 + R2 기반 언론사 사이트 구축 템플릿이다.  
 기존 `wow3dprinting.co.kr` 콘텐츠 이관과 CMS 운영을 포함한다.
 
