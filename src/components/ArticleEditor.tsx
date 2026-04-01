@@ -74,12 +74,37 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
       const asset = await uploadAsset(file);
       const imageMarkdown = `\n![${file.name}](${asset.url})\n`;
       
-      // 커서 위치에 삽입 로직 (간소화하여 하단 추가)
-      setFormData(prev => ({ ...prev, content: prev.content + imageMarkdown }));
+      // 커서 위치에 정밀하게 삽입하는 로직
+      if (textareaRef.current) {
+        const start = textareaRef.current.selectionStart;
+        const end = textareaRef.current.selectionEnd;
+        const currentContent = formData.content;
+        
+        const newContent = 
+          currentContent.substring(0, start) + 
+          imageMarkdown + 
+          currentContent.substring(end);
+        
+        setFormData(prev => ({ ...prev, content: newContent }));
+        
+        // 상태 업데이트 후 커서 위치 조정 (다음 틱에서 실행)
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            const newPos = start + imageMarkdown.length;
+            textareaRef.current.setSelectionRange(newPos, newPos);
+          }
+        }, 0);
+      } else {
+        // 폴백: 맨 뒤에 추가
+        setFormData(prev => ({ ...prev, content: prev.content + imageMarkdown }));
+      }
     } catch (err) {
       alert('본문 이미지 업로드 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
+      // 인풋 초기화 (같은 파일 다시 선택 가능하게)
+      e.target.value = '';
     }
   };
 
@@ -330,6 +355,17 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
               className="w-full min-h-[500px] bg-muted/30 border-none rounded-[2rem] p-8 font-mono text-base leading-relaxed focus:ring-2 focus:ring-primary outline-none focus:bg-background transition-all"
               placeholder="여기에 기사 내용을 작성하세요..."
             />
+
+            {/* 실시간 미리보기 영역 (Live Preview) */}
+            <div className="mt-16 pt-16 border-t-2 border-dashed border-muted">
+              <div className="flex items-center gap-3 mb-10 opacity-40">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <h3 className="text-xs font-black uppercase tracking-[0.3em]">실시간 미리보기 (Live Preview)</h3>
+              </div>
+              <div className="bg-primary/[0.01] rounded-[2.5rem] p-8 border border-primary/5 shadow-inner">
+                <Markdown content={formData.content} />
+              </div>
+            </div>
           </div>
         ) : (
           <Markdown content={formData.content} />
