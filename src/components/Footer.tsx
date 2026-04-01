@@ -15,32 +15,32 @@ export default function Footer() {
               3D프린팅타임즈는 적층 제조, 인공지능 혁신, 로봇 자동화의 미래를 독자들에게 가장 빠르고 정확하게 전달합니다. 기술 중심의 세상을 위해 복잡한 기술을 알기 쉽게 풀어냅니다.
             </p>
             <div className="flex gap-4 items-center">
-                {/* Social icons placeholder */}
-                <span className="w-5 h-5 bg-muted rounded-full"></span>
-                <span className="w-5 h-5 bg-muted rounded-full"></span>
-                <span className="w-5 h-5 bg-muted rounded-full"></span>
+              {/* Social icons placeholder */}
+              <span className="w-5 h-5 bg-muted rounded-full"></span>
+              <span className="w-5 h-5 bg-muted rounded-full"></span>
+              <span className="w-5 h-5 bg-muted rounded-full"></span>
             </div>
           </div>
           <div className="flex flex-col gap-3">
-             <h4 className="text-sm font-bold tracking-widest text-foreground">카테고리</h4>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">인공지능 (AI)</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">3D 프린팅</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">로보틱스</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">산업 리뷰</Link>
+            <h4 className="text-sm font-bold tracking-widest text-foreground">카테고리</h4>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">인공지능 (AI)</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">3D 프린팅</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">로보틱스</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">산업 리뷰</Link>
           </div>
           <div className="flex flex-col gap-3">
-             <h4 className="text-sm font-bold tracking-widest text-foreground">고객센터</h4>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">회사 소개</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">개인정보처리방침</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">이용약관</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">광고 및 제휴</Link>
+            <h4 className="text-sm font-bold tracking-widest text-foreground">고객센터</h4>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">회사 소개</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">개인정보처리방침</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">이용약관</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">광고 및 제휴</Link>
           </div>
           <div className="flex flex-col gap-4">
             <h4 className="text-sm font-bold tracking-widest text-foreground">뉴스레터 구독</h4>
             <p className="text-xs text-muted-foreground italic">최신 기술 동향을 이메일로 받아보세요.</p>
             <div className="flex gap-2">
-               <input type="email" placeholder="이메일 주소" className="w-full text-xs p-2 bg-background border rounded-md focus:ring-1 focus:ring-primary outline-none" />
-               <button className="text-xs font-bold bg-primary text-primary-foreground px-3 py-2 rounded-md hover:opacity-90">구독</button>
+              <input type="email" placeholder="이메일 주소" className="w-full text-xs p-2 bg-background border rounded-md focus:ring-1 focus:ring-primary outline-none" />
+              <button className="text-xs font-bold bg-primary text-primary-foreground px-3 py-2 rounded-md hover:opacity-90">구독</button>
             </div>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p>© 2015-2026 3D Printing Times. All rights reserved.</p>
             <div className="flex gap-4 uppercase font-bold tracking-tighter">
-               <span>Powered by Cloudflare Pages & D1</span>
+              <span>Powered by wow3d HongDae</span>
             </div>
           </div>
         </div>
