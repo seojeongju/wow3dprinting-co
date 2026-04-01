@@ -37,13 +37,41 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   if (path.startsWith("/news/")) {
-    const slug = path.replace("/news/", "");
-    const article = await context.env.DB.prepare(
-      "SELECT title, body_html, published_at FROM articles WHERE slug = ? AND status = 'published'"
+    const slug = path.replace("/news/", "").split("/")[0] || "";
+    type ArticleRow = { title: string; body_html: string; published_at: string; slug: string };
+
+    let article = await context.env.DB.prepare(
+      "SELECT title, body_html, published_at, slug FROM articles WHERE slug = ? AND status = 'published'"
     )
       .bind(slug)
-      .first<{ title: string; body_html: string; published_at: string }>();
+      .first<ArticleRow>();
+
+    // 재이관 등으로 slug 접미사(해시)만 바뀐 옛 URL 지원: 같은 제목 접두(예: 3dprintingtimescookie-*) 기사 1건이면 캐논 URL로 이동
+    if (!article) {
+      const parsed = slug.match(/^(.+)-([a-f0-9]{12})$/i);
+      const prefix = parsed?.[1];
+      if (prefix && prefix !== "untitled" && prefix.length >= 4) {
+        const { results } = await context.env.DB.prepare(
+          `SELECT title, body_html, published_at, slug FROM articles
+           WHERE status = 'published' AND slug LIKE ?
+           ORDER BY published_at DESC
+           LIMIT 2`
+        )
+          .bind(`${prefix}-%`)
+          .all<ArticleRow>();
+        const list = (results ?? []) as ArticleRow[];
+        if (list.length === 1) {
+          const row = list[0];
+          if (row.slug !== slug) {
+            return Response.redirect(new URL(`/news/${row.slug}`, context.request.url).toString(), 301);
+          }
+          article = row;
+        }
+      }
+    }
+
     if (!article) return new Response("Not found", { status: 404 });
+
     return new Response(
       htmlDocument(
         article.title,
