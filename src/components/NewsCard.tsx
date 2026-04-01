@@ -31,9 +31,20 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
   };
 
   const fallbackImage = extractValidThumbnail(article.content);
-  const imageUrl = article.thumbnailKey 
-    ? `/api/assets/${article.thumbnailKey}` 
-    : fallbackImage;
+  
+  // 외부 URL인지 내부 R2 키인지 판별 로직
+  const getProcessedImageUrl = (key: string | null, fallback: string | null) => {
+    const rawUrl = key || fallback;
+    if (!rawUrl) return null;
+    
+    // http로 시작하면 외부 URL이므로 그대로 반환, 아니면 내부 R2 자산 경로 사용
+    if (rawUrl.startsWith('http') || rawUrl.startsWith('//')) {
+      return rawUrl;
+    }
+    return `/api/assets/${rawUrl}`;
+  };
+
+  const imageUrl = getProcessedImageUrl(article.thumbnailKey, fallbackImage);
 
   // 2. 본문 요약문 정제 (마크다운 이미지, 링크, 특수문자 제거)
   const cleanExcerpt = (content: string) => {

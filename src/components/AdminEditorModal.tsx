@@ -47,8 +47,8 @@ export default function AdminEditorModal({ article, onClose }: AdminEditorModalP
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="w-full max-w-4xl bg-card border rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
+      <div className="w-full max-w-4xl bg-card border rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col my-auto max-h-none min-h-[500px]">
         <div className="p-6 border-b flex items-center justify-between bg-muted/30">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
