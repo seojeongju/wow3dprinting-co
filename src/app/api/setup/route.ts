@@ -21,9 +21,9 @@ export async function GET() {
 
     // 1. 카테고리 초기 데이터 삽입 (Seed)
     const seedCategories = [
-      { name: 'AI & Machine Learning', slug: 'ai-ml', description: '차세대 인공지능 기술 소식' },
-      { name: '3D Printing & Manufacturing', slug: '3d-printing', description: '적층 제조 및 디지털 제작 기술' },
-      { name: 'Robotics & Automation', slug: 'robotics', description: '로봇 공학 및 자동화 기술 트렌드' }
+      { name: '인공지능 (AI)', slug: 'ai-ml', description: '차세대 인공지능 기술 소식' },
+      { name: '3D 프린팅', slug: '3d-printing', description: '적층 제조 및 디지털 제작 기술' },
+      { name: '로보틱스', slug: 'robotics', description: '로봇 공학 및 자동화 기술 트렌드' }
     ];
 
     // 중복 방지 로직 (간단히 모든 카테고리 시도 후 에러 무시 또는 갯수 확인)

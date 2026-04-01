@@ -8,11 +8,11 @@ export default function Footer() {
           <div className="md:col-span-2 lg:col-span-2 flex flex-col gap-4">
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-xl font-black tracking-tighter text-primary">
-                3D<span className="text-secondary-foreground font-light">PRINTING</span>TIMES
+                3D<span className="text-secondary-foreground font-light">프린팅</span>타임즈
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-              The 3D Printing Times informs and educates readers about the future of additive manufacturing, AI innovations, and robotic automation. Breaking down the complex for the tech-driven world.
+              3D프린팅타임즈는 적층 제조, 인공지능 혁신, 로봇 자동화의 미래를 독자들에게 가장 빠르고 정확하게 전달합니다. 기술 중심의 세상을 위해 복잡한 기술을 알기 쉽게 풀어냅니다.
             </p>
             <div className="flex gap-4 items-center">
                 {/* Social icons placeholder */}
@@ -22,25 +22,25 @@ export default function Footer() {
             </div>
           </div>
           <div className="flex flex-col gap-3">
-             <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Categories</h4>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">AI & ML</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">3D Printing</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Robotics</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Industry Reports</Link>
+             <h4 className="text-sm font-bold tracking-widest text-foreground">카테고리</h4>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">인공지능 (AI)</Link>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">3D 프린팅</Link>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">로보틱스</Link>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">산업 리뷰</Link>
           </div>
           <div className="flex flex-col gap-3">
-             <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Support</h4>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">About Us</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link>
-             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</Link>
+             <h4 className="text-sm font-bold tracking-widest text-foreground">고객센터</h4>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">회사 소개</Link>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">개인정보처리방침</Link>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">이용약관</Link>
+             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">광고 및 제휴</Link>
           </div>
           <div className="flex flex-col gap-4">
-            <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Subscribe</h4>
-            <p className="text-xs text-muted-foreground italic">Stay ahead with the tech-news digest.</p>
+            <h4 className="text-sm font-bold tracking-widest text-foreground">뉴스레터 구독</h4>
+            <p className="text-xs text-muted-foreground italic">최신 기술 동향을 이메일로 받아보세요.</p>
             <div className="flex gap-2">
-               <input type="email" placeholder="Email Address" className="w-full text-xs p-2 bg-background border rounded-md focus:ring-1 focus:ring-primary outline-none" />
-               <button className="text-xs font-bold bg-primary text-primary-foreground px-3 py-2 rounded-md hover:opacity-90">GO</button>
+               <input type="email" placeholder="이메일 주소" className="w-full text-xs p-2 bg-background border rounded-md focus:ring-1 focus:ring-primary outline-none" />
+               <button className="text-xs font-bold bg-primary text-primary-foreground px-3 py-2 rounded-md hover:opacity-90">구독</button>
             </div>
           </div>
         </div>

@@ -2,33 +2,33 @@ import Link from 'next/link';
 import { Search, Menu, Cpu, Printer, Radio } from 'lucide-react';
 
 const CATEGORIES = [
-  { name: 'AI & ML', href: '/category/ai-ml', icon: Cpu },
-  { name: '3D PRINTING', href: '/category/3d-printing', icon: Printer },
-  { name: 'ROBOTICS', href: '/category/robotics', icon: Radio },
+  { name: '인공지능', href: '/category/ai-ml', icon: Cpu },
+  { name: '3D 프린팅', href: '/category/3d-printing', icon: Printer },
+  { name: '로보틱스', href: '/category/robotics', icon: Radio },
 ];
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 md:px-6">
-        {/* Top bar (Optional: Trending/Date) */}
-        <div className="hidden border-b py-2 text-xs font-medium md:flex justify-between items-center text-muted-foreground uppercase tracking-wider">
+        {/* Top bar (Trending/Date) */}
+        <div className="hidden border-b py-2 text-xs font-medium md:flex justify-between items-center text-muted-foreground tracking-wider">
           <div className="flex gap-4">
-            <span>Trending:</span>
-            <Link href="#" className="hover:text-foreground">Next-Gen Slicing</Link>
-            <Link href="#" className="hover:text-foreground">Generative Design</Link>
+            <span className="font-bold">주요 소식:</span>
+            <Link href="#" className="hover:text-foreground">차세대 슬라이싱 기술</Link>
+            <Link href="#" className="hover:text-foreground">제너레이티브 디자인 2.0</Link>
           </div>
-          <div>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+          <div>{new Date().toLocaleDateString('ko-KR', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
         </div>
 
         <div className="flex h-16 items-center justify-between py-4">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-2xl font-black tracking-tighter text-primary flex items-center">
-                3D<span className="text-secondary-foreground font-light">PRINTING</span>TIMES
+                3D<span className="text-secondary-foreground font-light">프린팅</span>타임즈
               </span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-bold uppercase tracking-widest">
+            <nav className="hidden md:flex items-center gap-6 text-sm font-bold tracking-widest">
               {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.name}
@@ -49,8 +49,8 @@ export default function Header() {
               <Menu className="w-6 h-6" />
             </button>
             <div className="hidden md:block">
-               <Link href="/admin" className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
-                SUBSCRIBE
+               <Link href="/admin" className="text-xs font-bold bg-primary text-primary-foreground px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
+                구독하기
                </Link>
             </div>
           </div>

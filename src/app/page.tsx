@@ -51,8 +51,8 @@ export default async function Home() {
 
       {/* Search Header */}
       <div className="mb-12 border-b pb-8">
-        <h2 className="text-3xl font-black uppercase tracking-tighter">Technology Intelligence</h2>
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em] opacity-60">The Official Voice of wow3dprinting-co</p>
+        <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인텔리전스</h2>
+        <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">WOW3D의 공식 기술 미디어</p>
       </div>
 
       {/* Hero Section */}
@@ -62,7 +62,7 @@ export default async function Home() {
             <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} priority />
           </div>
           <div className="lg:col-span-4 flex flex-col gap-10 divide-y">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] border-b pb-2 opacity-50">Latest Updates</h2>
+            <h2 className="text-xs font-black tracking-[0.3em] border-b pb-2 opacity-50">최신 업데이트</h2>
             {remainingArticles.slice(0, 3).map((item) => (
               <div key={item.article.id} className="pt-6">
                  <NewsCard article={{ ...item.article, category: item.category }} compact />
@@ -72,8 +72,8 @@ export default async function Home() {
         </section>
       ) : (
         <div className="py-32 text-center border-2 border-dashed rounded-3xl bg-muted/20">
-           <h2 className="text-2xl font-black italic text-muted-foreground opacity-30">NO INTEL YET</h2>
-           <p className="text-sm mt-4 text-muted-foreground font-medium">Coming soon: The future of 3D Printing & Robotics.</p>
+           <h2 className="text-2xl font-black italic text-muted-foreground opacity-30">등록된 기사가 없습니다</h2>
+           <p className="text-sm mt-4 text-muted-foreground font-medium">곧 3D 프린팅과 AI, 로보틱스의 미래가 다뤄질 예정입니다.</p>
         </div>
       )}
 
