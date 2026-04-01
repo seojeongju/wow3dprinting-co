@@ -265,7 +265,7 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
                 fill 
                 className="object-cover" 
                 priority
-                unoptimized={formData.thumbnailKey.startsWith('http') || formData.thumbnailKey.startsWith('//')}
+                unoptimized={true}
               />
               {isEditing && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity gap-4 shadow-inner">

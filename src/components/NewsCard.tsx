@@ -81,7 +81,7 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
                 fill 
                 className="object-cover"
                 priority={priority}
-                unoptimized={!!imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('//'))}
+                unoptimized={true}
               />
           </div>
         </Link>

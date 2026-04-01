@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 let nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    unoptimized: true,
+  },
 };
 
 // setupDevPlatform은 로컬 개발 환경에서만 동적으로 적용되도록 검토하거나,
