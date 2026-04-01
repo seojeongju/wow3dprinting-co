@@ -195,6 +195,7 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
             fill 
             className="object-cover" 
             priority
+            unoptimized={article.thumbnailKey.startsWith('http') || article.thumbnailKey.startsWith('//')}
           />
         </div>
       )}

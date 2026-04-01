@@ -72,7 +72,7 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
                 fill 
                 className="object-cover"
                 priority={priority}
-                unoptimized={!article.thumbnailKey} // 외부 URL인 경우 최적화 생략
+                unoptimized={!!imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('//'))}
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted to-accent/20">
