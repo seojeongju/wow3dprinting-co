@@ -47,7 +47,7 @@ export default function AdminActions({ article }: AdminActionsProps) {
         className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 shadow-lg shadow-primary/20"
       >
         <Edit3 className="w-3.5 h-3.5" />
-        Modify Content
+        기사 내용 수정
       </button>
 
       <button
@@ -60,7 +60,7 @@ export default function AdminActions({ article }: AdminActionsProps) {
         ) : (
           <Trash2 className="w-3.5 h-3.5" />
         )}
-        Delete
+        기사 삭제
       </button>
 
       {isEditModalOpen && (

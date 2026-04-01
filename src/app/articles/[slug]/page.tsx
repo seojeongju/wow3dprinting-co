@@ -62,7 +62,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               <Settings className="w-6 h-6 animate-spin-slow" />
             </div>
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">Admin Intelligence</p>
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">운영 관리자 전용 도구</p>
               <p className="text-xs text-muted-foreground font-medium italic opacity-70">실시간 기사 관리 및 콘텐츠 최적화 모드가 활성화되었습니다.</p>
             </div>
           </div>
@@ -79,7 +79,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           )}
           <div className="h-px w-8 bg-muted-foreground/20" />
           <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase opacity-40">
-            Status: {article.status?.toUpperCase() || 'PUBLISHED'}
+            상태: {article.status?.toUpperCase() || 'PUBLISHED'}
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight italic">
@@ -87,8 +87,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         </h1>
         <div className="flex items-center gap-4 text-sm text-muted-foreground border-t border-b py-4">
           <div className="flex flex-col">
-            <span className="font-bold text-foreground">BY {article.authorId.toUpperCase()}</span>
-            <span>Published on {article.publishedAt ? format(new Date(article.publishedAt), 'MMMM d, yyyy') : 'Recently'}</span>
+            <span className="font-bold text-foreground">작성: {article.authorId.toUpperCase() || '관리자'}</span>
+            <span>게시일: {article.publishedAt ? format(new Date(article.publishedAt), 'yyyy년 M월 d일') : '최근'}</span>
           </div>
         </div>
       </header>
@@ -108,10 +108,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <Markdown content={article.content} />
 
       <footer className="mt-20 border-t pt-12">
-        <h3 className="text-sm font-bold uppercase tracking-widest mb-6">Expert Analysis & Insights</h3>
+        <h3 className="text-sm font-bold uppercase tracking-widest mb-6">전문가 분석 및 인사이트</h3>
         <p className="text-muted-foreground text-sm italic">
-          3D Printing Times continues to monitor the intersection of AI and manufacturing technology. 
-          Stay tuned for our follow-up reports.
+          3D프린팅타임즈는 인공지능과 제조 기술의 융합을 지속적으로 모니터링합니다. 
+          추가적인 후속 리포트를 기대해 주세요.
         </p>
       </footer>
     </article>

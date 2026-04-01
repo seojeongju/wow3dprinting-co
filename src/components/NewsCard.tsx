@@ -68,7 +68,7 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
                 <div className="w-8 h-8 opacity-20 mb-2 text-primary/30">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                 </div>
-                <span className={`font-black uppercase tracking-[0.3em] text-primary/30 ${compact ? 'text-[6px]' : 'text-[10px]'}`}>No Media</span>
+                <span className={`font-black uppercase tracking-[0.3em] text-primary/30 ${compact ? 'text-[6px]' : 'text-[10px]'}`}>이미지 준비 중</span>
               </div>
             )}
         </div>
@@ -77,7 +77,7 @@ export default function NewsCard({ article, priority, compact }: NewsCardProps) 
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
-            Tech Intelligence
+            3D프린팅 기술 인사이트
           </span>
           <span className="text-[10px] font-medium text-muted-foreground border-l pl-2">
             {article.publishedAt ? format(new Date(article.publishedAt), 'yyyy년 M월 d일') : '최근'}

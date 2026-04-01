@@ -45,7 +45,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <Link href="/" className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm font-bold tracking-widest uppercase">
         <ArrowLeft className="w-4 h-4" />
-        Back to News
+        뉴스 홈으로 돌아가기
       </Link>
       
       <div className="w-full max-w-md bg-card border rounded-3xl shadow-2xl overflow-hidden">
@@ -54,13 +54,13 @@ export default function LoginPage() {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter mb-2">Admin Portal</h1>
+            <h1 className="text-3xl font-black uppercase tracking-tighter mb-2 text-primary">운영 관리자 포털</h1>
             <p className="text-sm text-muted-foreground font-medium opacity-70 italic">글쓰기 및 권한 관리를 위해 로그인하세요.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
+              <label className="text-xs font-black uppercase tracking-widest text-primary ml-1">관리자 이메일</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -75,7 +75,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Secret Password</label>
+              <label className="text-xs font-black uppercase tracking-widest text-primary ml-1">보안 비밀번호</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -105,7 +105,7 @@ export default function LoginPage() {
               ) : (
                 <>
                   <LogIn className="w-5 h-5" />
-                  Authenticate
+                  시스템 보안 인증 및 로그인
                 </>
               )}
             </button>
