@@ -1,91 +1,94 @@
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  baseUrl: string;
+  baseUrl?: string;
 }
 
-export default function Pagination({ currentPage, totalPages, baseUrl }: PaginationProps) {
-  if (totalPages <= 1) return null;
+export default function Pagination({ currentPage, totalPages, baseUrl = '/' }: PaginationProps) {
+  // 표시할 페이지 번호 범위 계산 (현재 페이지 앞뒤로 2개씩)
+  const getPageNumbers = () => {
+    const pages = [];
+    const moveRange = 2;
+    let start = Math.max(1, currentPage - moveRange);
+    let end = Math.min(totalPages, currentPage + moveRange);
 
-  const pages = [];
-  const maxVisiblePages = 5;
-
-  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-  if (endPage - startPage + 1 < maxVisiblePages) {
-    startPage = Math.max(1, endPage - maxVisiblePages + 1);
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
-  }
-
-  const getPageUrl = (page: number) => {
-    const separator = baseUrl.includes('?') ? '&' : '?';
-    return `${baseUrl}${separator}page=${page}`;
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
   };
 
+  const pages = getPageNumbers();
+
   return (
-    <div className="flex flex-col items-center gap-6 mt-16 pt-8 border-t border-muted/30">
-      <div className="flex items-center gap-2">
-        {/* Previous Button */}
-        {currentPage > 1 && (
+    <nav className="flex items-center gap-1 sm:gap-2">
+      {/* 이전 페이지 버튼 */}
+      <Link
+        href={currentPage > 1 ? `${baseUrl}?page=${currentPage - 1}` : '#'}
+        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${
+          currentPage > 1 
+            ? 'hover:bg-primary/10 hover:border-primary text-foreground' 
+            : 'opacity-20 cursor-not-allowed pointer-events-none'
+        }`}
+        aria-disabled={currentPage <= 1}
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </Link>
+
+      {/* 페이지 숫자 목록 */}
+      {pages[0] > 1 && (
+        <>
           <Link
-            href={getPageUrl(currentPage - 1)}
-            className="h-10 px-4 inline-flex items-center justify-center rounded-lg border border-muted hover:bg-muted/50 transition-all font-medium text-sm"
+            href={`${baseUrl}?page=1`}
+            className="w-10 h-10 hidden sm:flex items-center justify-center rounded-xl border hover:bg-primary/10 hover:border-primary transition-all text-xs font-bold"
           >
-            이전
+            1
           </Link>
-        )}
+          {pages[0] > 2 && <span className="px-1 text-muted-foreground opacity-50">...</span>}
+        </>
+      )}
 
-        {/* Page Numbers */}
-        <div className="flex items-center gap-1">
-          {startPage > 1 && (
-            <>
-              <Link href={getPageUrl(1)} className="w-10 h-10 inline-flex items-center justify-center rounded-lg hover:bg-muted/50 transition-all text-sm">1</Link>
-              {startPage > 2 && <span className="text-muted-foreground px-1">...</span>}
-            </>
-          )}
+      {pages.map((page) => (
+        <Link
+          key={page}
+          href={`${baseUrl}?page=${page}`}
+          className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all text-xs font-bold ${
+            currentPage === page
+              ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110 z-10'
+              : 'hover:bg-primary/10 hover:border-primary text-muted-foreground'
+          }`}
+        >
+          {page}
+        </Link>
+      ))}
 
-          {pages.map((page) => (
-            <Link
-              key={page}
-              href={getPageUrl(page)}
-              className={`w-10 h-10 inline-flex items-center justify-center rounded-lg transition-all text-sm font-bold ${
-                currentPage === page
-                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                  : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {page}
-            </Link>
-          ))}
-
-          {endPage < totalPages && (
-            <>
-              {endPage < totalPages - 1 && <span className="text-muted-foreground px-1">...</span>}
-              <Link href={getPageUrl(totalPages)} className="w-10 h-10 inline-flex items-center justify-center rounded-lg hover:bg-muted/50 transition-all text-sm">{totalPages}</Link>
-            </>
-          )}
-        </div>
-
-        {/* Next Button */}
-        {currentPage < totalPages && (
+      {pages[pages.length - 1] < totalPages && (
+        <>
+          {pages[pages.length - 1] < totalPages - 1 && <span className="px-1 text-muted-foreground opacity-50">...</span>}
           <Link
-            href={getPageUrl(currentPage + 1)}
-            className="h-10 px-4 inline-flex items-center justify-center rounded-lg border border-muted hover:bg-muted/50 transition-all font-medium text-sm"
+            href={`${baseUrl}?page=${totalPages}`}
+            className="w-10 h-10 hidden sm:flex items-center justify-center rounded-xl border hover:bg-primary/10 hover:border-primary transition-all text-xs font-bold"
           >
-            다음
+            {totalPages}
           </Link>
-        )}
-      </div>
-      
-      <p className="text-xs font-medium text-muted-foreground/60 tracking-widest uppercase">
-        Page {currentPage} of {totalPages}
-      </p>
-    </div>
+        </>
+      )}
+
+      {/* 다음 페이지 버튼 */}
+      <Link
+        href={currentPage < totalPages ? `${baseUrl}?page=${currentPage + 1}` : '#'}
+        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${
+          currentPage < totalPages 
+            ? 'hover:bg-primary/10 hover:border-primary text-foreground' 
+            : 'opacity-20 cursor-not-allowed pointer-events-none'
+        }`}
+        aria-disabled={currentPage >= totalPages}
+      >
+        <ChevronRight className="w-5 h-5" />
+      </Link>
+    </nav>
   );
 }

@@ -1,11 +1,14 @@
 import { getDb } from '@/lib/db';
 import { articles, categories } from '@/lib/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, count } from 'drizzle-orm';
 import NewsCard from '@/components/NewsCard';
+import Pagination from '@/components/Pagination';
 
 export const runtime = 'edge';
 
-async function getLatestArticles() {
+const ARTICLES_PER_PAGE = 12;
+
+async function getLatestArticles(page: number = 1) {
   try {
     const db = getDb();
     const results = await db
@@ -17,7 +20,8 @@ async function getLatestArticles() {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .where(eq(articles.status, 'published'))
       .orderBy(desc(articles.publishedAt))
-      .limit(10);
+      .limit(ARTICLES_PER_PAGE)
+      .offset((page - 1) * ARTICLES_PER_PAGE);
     
     return results;
   } catch (error) {
@@ -26,17 +30,45 @@ async function getLatestArticles() {
   }
 }
 
-export default async function Home() {
+async function getTotalArticlesCount() {
+  try {
+    const db = getDb();
+    const result = await db
+      .select({ value: count() })
+      .from(articles)
+      .where(eq(articles.status, 'published'))
+      .get();
+    
+    return result?.value || 0;
+  } catch (error) {
+    console.error('Count Articles Error:', error);
+    return 0;
+  }
+}
+
+export default async function Home({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ page?: string }> 
+}) {
+  const params = await searchParams;
+  const currentPage = parseInt(params.page || '1', 10);
+
   let latestData: Awaited<ReturnType<typeof getLatestArticles>> = [];
+  let totalCount = 0;
   let dbError: string | null = null;
 
   try {
-    latestData = await getLatestArticles();
+    [latestData, totalCount] = await Promise.all([
+      getLatestArticles(currentPage),
+      getTotalArticlesCount()
+    ]);
   } catch (error: any) {
     console.error('Home Page Error:', error);
     dbError = error.message;
   }
 
+  const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
   const [heroArticle, ...remainingArticles] = latestData;
 
   return (
@@ -52,25 +84,25 @@ export default async function Home() {
       {/* Search Header */}
       <div className="mb-12 border-b pb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인텔리전스</h2>
-          <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">WOW3D의 공식 기술 미디어</p>
+          <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인사이트</h2>
+          <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">미래 기술을 읽는 3D프린팅타임즈 소식</p>
         </div>
-        <div className="px-4 py-2 bg-muted/30 border rounded-2xl flex items-center gap-3">
+        <div className="px-4 py-2 bg-primary/5 border border-primary/20 rounded-2xl flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-          <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
-            Live Updates: {latestData.length > 0 ? 'Active' : 'Standby'}
+          <span className="text-xs font-bold tracking-widest text-primary uppercase">
+            전체 게시물: {totalCount.toLocaleString()}건
           </span>
         </div>
       </div>
 
-      {/* Hero Section */}
-      {heroArticle ? (
+      {/* Hero Section - 1페이지에서만 노출 */}
+      {heroArticle && currentPage === 1 ? (
         <section className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-12">
           <div className="lg:col-span-8">
             <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} priority />
           </div>
           <div className="lg:col-span-4 flex flex-col gap-10 divide-y">
-            <h2 className="text-xs font-black tracking-[0.3em] border-b pb-2 opacity-50">최신 업데이트</h2>
+            <h2 className="text-xs font-black tracking-[0.3em] border-b pb-2 opacity-50 uppercase">최신 업데이트</h2>
             {remainingArticles.slice(0, 3).map((item) => (
               <div key={item.article.id} className="pt-6">
                  <NewsCard article={{ ...item.article, category: item.category }} compact />
@@ -78,20 +110,30 @@ export default async function Home() {
             ))}
           </div>
         </section>
-      ) : (
-        <div className="py-32 text-center border-2 border-dashed rounded-3xl bg-muted/20">
-           <h2 className="text-2xl font-black italic text-muted-foreground opacity-30">등록된 기사가 없습니다</h2>
-           <p className="text-sm mt-4 text-muted-foreground font-medium">곧 3D 프린팅과 AI, 로보틱스의 미래가 다뤄질 예정입니다.</p>
+      ) : null}
+
+      {/* Grid Section */}
+      <section className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-20">
+        {(currentPage === 1 ? remainingArticles.slice(3) : latestData).map((item) => (
+          <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} />
+        ))}
+      </section>
+
+      {/* Pagination UI */}
+      {totalPages > 1 && (
+        <div className="mt-12 py-12 border-t flex justify-center">
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+          />
         </div>
       )}
 
-      {/* Grid Section */}
-      {remainingArticles.length > 3 && (
-        <section className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-           {remainingArticles.slice(3).map((item) => (
-             <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} />
-           ))}
-        </section>
+      {latestData.length === 0 && (
+        <div className="py-32 text-center border-2 border-dashed rounded-3xl bg-muted/20">
+           <h2 className="text-2xl font-black italic text-muted-foreground opacity-30 uppercase">기사 데이터 로드 대기 중</h2>
+           <p className="text-sm mt-4 text-muted-foreground font-medium">관리자 시스템에서 마이그레이션이 원활하게 진행 중입니다.</p>
+        </div>
       )}
     </div>
   );
