@@ -1,32 +1,41 @@
-# Dependencies
-node_modules/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Wrangler / local state
-.wrangler/
-.dev.vars
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Env & secrets
-.env
-.env.*
+# testing
+/coverage
 
-# Generated import artifacts (regenerate with npm run run-all)
-packages/importer/output/
+# next.js
+/.next/
+/out/
 
-# Temp SQL batches from apply-d1-remote
-packages/importer/src/d1-temp/
+# production
+/build
 
-# Logs
-*.log
-npm-debug.log*
-
-# OS
+# misc
 .DS_Store
-Thumbs.db
+*.pem
 
-# Cursor / IDE (optional local)
-.cursor/
-agent-transcripts/
-agent-tools/
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# Local screenshots / uploads (do not commit)
-assets/
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

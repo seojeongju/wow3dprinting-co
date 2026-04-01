@@ -1,33 +1,36 @@
-# wow3dprinting-cloudflare-news
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-**정식 작업 경로**: `d:\Program_DEV\wow3dprinting-co` — Cursor에서는 이 폴더를 열어 작업한다.
+## Getting Started
 
-**원격 저장소**: [github.com/seojeongju/wow3dprinting-co](https://github.com/seojeongju/wow3dprinting-co) (`main` 브랜치)
+First, run the development server:
 
-Cloudflare Pages + D1 + R2 기반 언론사 사이트 구축 템플릿이다.  
-기존 `wow3dprinting.co.kr` 콘텐츠 이관과 CMS 운영을 포함한다.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## 디렉터리
-- `apps/web`: Pages Functions + 정적 페이지 + API
-- `packages/db`: D1 스키마/시드
-- `packages/importer`: 기존 사이트 이관/QA 스크립트
-- `docs`: 운영 문서
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## 빠른 시작
-1) D1/R2 생성 후 `apps/web/wrangler.toml` 값 반영  
-2) 스키마 적용: `packages/db/schema.sql`, `packages/db/seed.sql`  
-3) 이관 실행: `node packages/importer/src/import.mjs`  
-4) QA 실행: `node packages/importer/src/qa-report.mjs`  
-5) D1 적재 SQL 생성: `node packages/importer/src/build-d1-load-sql.mjs`  
-6) D1 반영: `wrangler d1 execute wow3dprinting_news --file=packages/importer/output/load-d1.sql`  
-7) Pages 배포: `wrangler pages deploy apps/web/public`
-8) 자동 배포(선택): `cd packages/importer && npm run deploy-all -- --db-name wow3dprinting_news --project-name wow3dprinting-news`
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 이어서 작업하기
-- 상태·남은 작업·명령 모음: [docs/handoff-next-session.md](docs/handoff-next-session.md)
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## 참고
-- 계획 문서는 별도 관리되며 수정하지 않는다.
-- 실제 운영 시 인증은 Access/JWT 기반으로 강화 권장.
-- 원격 D1 대량 적재는 `load-d1.sql` 한 파일보다 `cd packages/importer && npm run apply-d1-remote -- --fresh` 권장.
-- Pages 배포: `cd apps/web && wrangler pages deploy public --project-name wow3dprinting-news`
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
