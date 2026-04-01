@@ -13,8 +13,10 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.2",
+    "form-data": "^4.0.5",
     "lucide-react": "^1.7.0",
     "next": "15.1.0",
+    "node-fetch": "^3.3.2",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-markdown": "^10.1.0"
@@ -26,10 +28,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/turndown": "^5.0.6",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
+    "puppeteer": "^24.40.0",
     "tailwindcss": "^4",
+    "turndown": "^7.2.2",
     "typescript": "^5",
     "vercel": "47.0.4",
     "wrangler": "^4.79.0"
