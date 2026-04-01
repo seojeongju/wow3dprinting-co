@@ -5,11 +5,11 @@ export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   try {
     const { env } = getRequestContext();
-    const key = params.key;
+    const { key } = await params;
 
     if (!env.MEDIA) {
       return new NextResponse('R2 Storage not configured', { status: 500 });

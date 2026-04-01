@@ -23,8 +23,9 @@ async function getArticle(slug: string) {
   return results[0];
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const data = await getArticle(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const data = await getArticle(slug);
   if (!data) return { title: 'Article Not Found' };
 
   return {
@@ -37,8 +38,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const data = await getArticle(params.slug);
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const data = await getArticle(slug);
 
   if (!data || data.article.status !== 'published') {
     // Note: In development, we might want to see drafts. 
