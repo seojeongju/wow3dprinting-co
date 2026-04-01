@@ -50,9 +50,17 @@ export default async function Home() {
       )}
 
       {/* Search Header */}
-      <div className="mb-12 border-b pb-8">
-        <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인텔리전스</h2>
-        <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">WOW3D의 공식 기술 미디어</p>
+      <div className="mb-12 border-b pb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인텔리전스</h2>
+          <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">WOW3D의 공식 기술 미디어</p>
+        </div>
+        <div className="px-4 py-2 bg-muted/30 border rounded-2xl flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+          <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+            Live Updates: {latestData.length > 0 ? 'Active' : 'Standby'}
+          </span>
+        </div>
       </div>
 
       {/* Hero Section */}
