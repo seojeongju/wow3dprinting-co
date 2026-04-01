@@ -40,9 +40,8 @@ export default async function Footer() {
           </div>
           <div className="flex flex-col gap-3">
             <h4 className="text-sm font-bold tracking-widest text-foreground uppercase italic px-1 underline decoration-primary decoration-2 underline-offset-4 mb-2 w-fit">Support</h4>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">회사 소개</Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">개인정보처리방침</Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">이용약관</Link>
+            <Link href="/policy/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">개인정보처리방침</Link>
+            <Link href="/policy/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">이용약관</Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">광고 및 제휴</Link>
           </div>
           <div className="flex flex-col gap-4">
