@@ -1,7 +1,11 @@
 import Link from 'next/link';
-import { Search, Menu, Radio } from 'lucide-react';
+import { Search, Menu, Radio, PlusCircle } from 'lucide-react';
+import { getSessionUser } from '@/lib/auth_edge';
 
-export default function Header() {
+export default async function Header() {
+  const user = await getSessionUser();
+  const isAdmin = user?.role === 'admin' || user?.role === 'editor';
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 md:px-6">
@@ -29,6 +33,12 @@ export default function Header() {
               <Link href="/" className="transition-colors hover:text-primary">
                 칼럼 & 인사이트
               </Link>
+              {isAdmin && (
+                <Link href="/admin" className="text-primary flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-500">
+                  <PlusCircle className="w-4 h-4" />
+                  기사 쓰기
+                </Link>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-4">

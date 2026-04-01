@@ -8,6 +8,13 @@
       "when": 1775017485057,
       "tag": "0000_premium_cobalt_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1775030744892,
+      "tag": "0001_add_users_table",
+      "breakpoints": true
     }
   ]
 }
