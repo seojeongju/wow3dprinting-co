@@ -7,24 +7,23 @@ import FormData from 'form-data';
  * ⚠️ 환경 설정란 ⚠️
  */
 const CONFIG = {
-  // 기사 목록이 포함된 메인 페이지 또는 게시판 주소
-  TARGET_BOARD_URL: 'https://wow3dprinting.co.kr/index#about', 
-  API_URL: 'http://localhost:3000/api/admin/articles',
+  // 90개씩 보여주는 SID 기반 고속 주소로 변경
+  BASE_BOARD_URL: 'https://wow3dprinting.co.kr/1229069', 
+  API_URL: 'https://wow3dprinting-co.pages.dev/api/admin/articles',
   SELECTORS: {
-    // 게시판 목록에서 개별 글을 가리키는 <a> 태그 (패턴 매칭 사용)
+    // 게시판 목록의 개별 기사 링크 선택자
     LIST_ITEM_LINK: 'a[href*="/forum/view/"]', 
-    
     // 개별 기사 상세 페이지 내의 선택자
     ARTICLE_TITLE: '.tpl-forum-title', 
     ARTICLE_CONTENT: '.fr-view', 
     ARTICLE_DATE: '.tpl-forum-date',
     ARTICLE_THUMBNAIL_META: 'meta[property="og:image"]',
   },
-  CATEGORY_ID: '1', // 기본 카테고리 ID
+  CATEGORY_ID: '1', // 기본 카테고리
 };
 
 /**
- * 날짜 문자열 변환 (2026. 3. 26 -> ISO String)
+ * 날짜 문자열 변환 (2024. 3. 26 -> ISO String)
  */
 function parseKoreanDate(dateStr: string): string {
   try {
@@ -37,7 +36,7 @@ function parseKoreanDate(dateStr: string): string {
       return date.toISOString();
     }
   } catch (e) {
-    console.error('날짜 파싱 실패:', dateStr);
+    // console.error('날짜 파싱 실패:', dateStr);
   }
   return new Date().toISOString();
 }
@@ -55,7 +54,6 @@ async function downloadImageAsBuffer(imageUrl: string): Promise<{ buffer: Buffer
       contentType: res.headers.get('content-type') || 'image/jpeg' 
     };
   } catch (e) {
-    // console.error(`이미지 다운로드 실패: ${imageUrl}`);
     return null;
   }
 }
@@ -65,15 +63,13 @@ async function runMigration() {
   const limitStr = args.find(a => a.startsWith('--limit='))?.split('=')[1];
   const limit = limitStr ? parseInt(limitStr) : Infinity;
 
-  console.log('🚀 3D프린팅타임즈 데이터 마이그레이션 시작 (Limit: ' + (limit === Infinity ? '전체' : limit) + ')');
+  console.log('🚀 [전수 마이그레이션 모드] 3D프린팅타임즈 데이터 수집 시작 (Max: ' + (limit === Infinity ? '1000+' : limit) + ')');
 
   const browser = await puppeteer.launch({ 
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'] 
   });
   const page = await browser.newPage();
-  
-  // 봇 차단 회피를 위한 User-Agent
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
   
   const turndownService = new TurndownService({
@@ -82,106 +78,121 @@ async function runMigration() {
   });
 
   try {
-    console.log(`📡 목록 페이지 접속: ${CONFIG.TARGET_BOARD_URL}`);
-    await page.goto(CONFIG.TARGET_BOARD_URL, { waitUntil: 'networkidle2' });
-    
-    // 게시판 요소가 로드될 때까지 대기 (최대 10초)
-    console.log('⏳ 기사 목록 로딩 대기 중...');
-    await new Promise(r => setTimeout(r, 5000)); 
+    // 1. 전체 기사 링크 전수 수집
+    const allArticleLinks = new Set<string>();
+    let currentPage = 1;
+    let stagnantCount = 0;
+    let lastLinkCount = 0;
 
-    // 1. 기사 링크 목록 추출
-    const articleLinks = await page.evaluate((selector) => {
-      const links = Array.from(document.querySelectorAll(selector));
-      // 중복 링크 제거 및 절대 경로 확보
-      return [...new Set(links.map((a: any) => a.href))].filter(Boolean);
-    }, CONFIG.SELECTORS.LIST_ITEM_LINK);
+    console.log('⏳ 링크 수집 중 (SID 고속 모드)...');
 
-    if (articleLinks.length === 0) {
-      console.error('❌ 기사 링크를 찾지 못했습니다. 메인 페이지에 기사 위젯이 노출되어 있는지 확인하세요.');
-      // 스크린샷 저장 (디버깅용)
-      await page.screenshot({ path: 'migration_error.png' });
-      return;
+    while (allArticleLinks.size < limit) {
+      const pageUrl = `${CONFIG.BASE_BOARD_URL}?post_page=${currentPage}`;
+      console.log(`  - [Page ${currentPage}] 조회 중 (${pageUrl})... 현재 누적: ${allArticleLinks.size}`);
+      
+      try {
+        await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+        await new Promise(r => setTimeout(r, 3000)); // AJAX 대기
+      } catch (e) {
+        console.warn(`  ⚠️ 페이지 로드 지연/실패 (${pageUrl}), 재시도...`);
+        stagnantCount++;
+        currentPage++;
+        if (stagnantCount >= 5) break;
+        continue;
+      }
+
+      const links = await page.evaluate((selector) => {
+        const elements = Array.from(document.querySelectorAll(selector));
+        return elements.map((e: any) => e.href).filter((h: string) => h && h.includes('/view/'));
+      }, CONFIG.SELECTORS.LIST_ITEM_LINK);
+
+      links.forEach(link => {
+        if (!link.includes('reply_id=')) { // 댓글 링크 제외
+          allArticleLinks.add(link);
+        }
+      });
+
+      // 데이터가 더 이상 늘어나지 않는지 체크
+      if (allArticleLinks.size === lastLinkCount) {
+        stagnantCount++;
+      } else {
+        stagnantCount = 0;
+      }
+      lastLinkCount = allArticleLinks.size;
+
+      // 3회 이상 데이터 변화가 없으면 수집 종료
+      if (stagnantCount >= 3 || links.length === 0) {
+        console.log(`  📊 더 수집할 기사가 없습니다. (${allArticleLinks.size}개 확보)`);
+        break;
+      }
+
+      currentPage++;
     }
 
-    const targetLinks = articleLinks.slice(0, limit);
-    console.log(`✅ 총 ${articleLinks.length}개 중 ${targetLinks.length}개의 기사를 이관 대상으로 확정했습니다.`);
+    const finalLinks = Array.from(allArticleLinks).slice(0, limit);
+    console.log(`✅ 총 ${finalLinks.length}개의 기사 링크를 수집했습니다.`);
 
-    // 2. 각 기사별 순회 추출
-    for (let i = 0; i < targetLinks.length; i++) {
-      const url = targetLinks[i];
-      console.log(`\n📄 [${i + 1}/${targetLinks.length}] 추출 중: ${url}`);
+    // 2. 기사 개별 순회 및 이관
+    for (let i = 0; i < finalLinks.length; i++) {
+      const url = finalLinks[i];
+      console.log(`\n📄 [${i + 1}/${finalLinks.length}] 이관 중: ${url}`);
       
       try {
         await page.goto(url, { waitUntil: 'networkidle2' });
         
-        // 데이터 파싱
         const articleData = await page.evaluate((sel) => {
-          const titleEl = document.querySelector(sel.ARTICLE_TITLE);
-          const contentEl = document.querySelector(sel.ARTICLE_CONTENT);
-          const dateEl = document.querySelector(sel.ARTICLE_DATE);
-          const thumbMeta = document.querySelector(sel.ARTICLE_THUMBNAIL_META);
+          const title = document.querySelector(sel.ARTICLE_TITLE)?.textContent?.trim() || '';
+          const content = document.querySelector(sel.ARTICLE_CONTENT)?.innerHTML || '';
+          const date = document.querySelector(sel.ARTICLE_DATE)?.textContent?.trim() || '';
+          const thumb = (document.querySelector(sel.ARTICLE_THUMBNAIL_META) as any)?.content || null;
           
-          return {
-            title: titleEl ? titleEl.textContent?.trim() : '',
-            contentHtml: contentEl ? contentEl.innerHTML : '',
-            dateStr: dateEl ? dateEl.textContent?.trim() : '',
-            thumbnailUrl: (thumbMeta as any)?.content || null
-          };
+          return { title, content, date, thumbnailUrl: thumb };
         }, CONFIG.SELECTORS);
 
-        if (!articleData.title || !articleData.contentHtml) {
-          console.warn(`⚠️ 데이터 누락 (${url}) - 건너뜁니다.`);
+        if (!articleData.title || !articleData.content) {
+          console.warn('  ⚠️ 데이터 누락으로 건너뜁니다.');
           continue;
         }
 
-        const markdownContent = turndownService.turndown(articleData.contentHtml);
-        const isoDate = parseKoreanDate(articleData.dateStr);
+        const markdown = turndownService.turndown(articleData.content);
+        const isoDate = parseKoreanDate(articleData.date);
 
-        // 3. FormData 구성
         const form = new FormData();
         form.append('title', articleData.title);
-        // 슬러그 중복 방지를 위한 시간값 포함
-        const uniqueSlug = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        form.append('slug', uniqueSlug);
-        form.append('content', markdownContent);
+        form.append('slug', `migrated-${Date.now()}-${i}`);
+        form.append('content', markdown);
         form.append('categoryId', CONFIG.CATEGORY_ID);
         form.append('status', 'published');
-        // createdAt은 서버 API가 지원해야 함. 현재 API가 지원하지 않을 경우 수동 D1 작업 필요.
-        
+        // createdAt 등 추가 필드 필요 시 보완 가능
+
         if (articleData.thumbnailUrl) {
-          const imgData = await downloadImageAsBuffer(articleData.thumbnailUrl);
-          if (imgData) {
-            form.append('thumbnail', imgData.buffer, {
+          const img = await downloadImageAsBuffer(articleData.thumbnailUrl);
+          if (img) {
+            form.append('thumbnail', img.buffer, {
               filename: 'thumbnail.jpg',
-              contentType: imgData.contentType,
+              contentType: img.contentType,
             });
           }
         }
 
-        console.log(`📤 API 서버 전송 중: ${articleData.title}`);
-        const res = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          body: form,
-        });
+        const res = await fetch(CONFIG.API_URL, { method: 'POST', body: form });
 
         if (res.ok) {
-          console.log(`✅ 이관 성공: ${articleData.title}`);
+          console.log(`  ✅ 성공: ${articleData.title}`);
         } else {
-          const errMsg = await res.text();
-          console.error(`❌ 이관 실패 (${res.status}):`, errMsg);
+          console.error(`  ❌ 실패: ${await res.text()}`);
         }
 
       } catch (e) {
-        console.error(`❌ 에러 발생 (${url}):`, e);
+        console.error(`  ❌ 에러 (${url}):`, e);
       }
       
-      // 대상 서버 부하 방지를 위한 딜레이
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
     }
 
-    console.log('\n🎉 마이그레이션 작업(테스트) 완료!');
+    console.log('\n🎉 모든 마이그레이션 작업이 종료되었습니다!');
   } catch (error) {
-    console.error('크롤러 실행 중 치명적 오류:', error);
+    console.error('크롤러 실행 중 중단 에러:', error);
   } finally {
     await browser.close();
   }
