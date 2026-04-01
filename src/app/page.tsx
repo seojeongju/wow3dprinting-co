@@ -27,11 +27,27 @@ async function getLatestArticles() {
 }
 
 export default async function Home() {
-  const latestData = await getLatestArticles();
+  let latestData: Awaited<ReturnType<typeof getLatestArticles>> = [];
+  let dbError: string | null = null;
+
+  try {
+    latestData = await getLatestArticles();
+  } catch (error: any) {
+    console.error('Home Page Error:', error);
+    dbError = error.message;
+  }
+
   const [heroArticle, ...remainingArticles] = latestData;
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6 min-h-screen">
+      {/* 바인딩 오류 시 안내 메시지 */}
+      {dbError && (
+        <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
+          <p className="font-bold">⚠️ Cloudflare Pages 설정이 필요합니다.</p>
+          <p className="text-sm opacity-80">{dbError}</p>
+        </div>
+      )}
       {/* Search Header Placeholder (for visual depth) */}
       <div className="mb-12 border-b pb-8">
         <h2 className="text-3xl font-black uppercase tracking-tighter">Technology Intelligence</h2>
