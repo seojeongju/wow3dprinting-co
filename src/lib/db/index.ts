@@ -3,7 +3,10 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import * as schema from './schema';
 
 export const getDb = () => {
-  const { env } = getRequestContext();
+  const { env } = getRequestContext() as any;
+  if (!env || !env.DB) {
+    throw new Error('Database binding "DB" is missing. Please check Cloudflare Pages settings.');
+  }
   return drizzle(env.DB, { schema });
 };
 
