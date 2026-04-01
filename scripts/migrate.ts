@@ -163,7 +163,7 @@ async function runMigration() {
         form.append('content', markdown);
         form.append('categoryId', CONFIG.CATEGORY_ID);
         form.append('status', 'published');
-        // createdAt 등 추가 필드 필요 시 보완 가능
+        form.append('password', 'admin1234'); // 관리자 인증 비밀번호 추가
 
         if (articleData.thumbnailUrl) {
           const img = await downloadImageAsBuffer(articleData.thumbnailUrl);

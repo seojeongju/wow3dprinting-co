@@ -5,6 +5,9 @@ import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import Markdown from '@/components/Markdown';
+import { isAdmin as checkIsAdmin } from '@/lib/auth_edge';
+import AdminActions from '@/components/AdminActions';
+import { Settings, Trash2, Edit3 } from 'lucide-react';
 
 export const runtime = 'edge';
 
@@ -41,10 +44,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const data = await getArticle(slug);
+  const isAdmin = await checkIsAdmin();
 
-  if (!data || data.article.status !== 'published') {
-    // Note: In development, we might want to see drafts. 
-    // But for production, this check is mandatory.
+  if (!data || (data.article.status !== 'published' && !isAdmin)) {
     if (!data) notFound();
   }
 
@@ -52,12 +54,34 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   return (
     <article className="container mx-auto px-4 py-12 md:px-6 max-w-4xl min-h-screen">
-      <header className="mb-8 flex flex-col gap-4">
-        {category && (
-          <span className="w-fit text-xs font-black uppercase tracking-tighter text-primary bg-primary/10 px-3 py-1 rounded">
-            {category.name}
+      {/* Admin Controls */}
+      {isAdmin && (
+        <div className="mb-12 p-6 bg-primary/[0.03] border border-primary/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-700 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-inner">
+              <Settings className="w-6 h-6 animate-spin-slow" />
+            </div>
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">Admin Intelligence</p>
+              <p className="text-xs text-muted-foreground font-medium italic opacity-70">실시간 기사 관리 및 콘텐츠 최적화 모드가 활성화되었습니다.</p>
+            </div>
+          </div>
+          <AdminActions article={article} />
+        </div>
+      )}
+
+      <header className="mb-14 flex flex-col gap-6">
+        <div className="flex items-center gap-3">
+          {category && (
+            <span className="w-fit text-[10px] font-black uppercase tracking-[0.3em] text-primary bg-primary/10 px-4 py-1.5 rounded-full">
+              {category.name}
+            </span>
+          )}
+          <div className="h-px w-8 bg-muted-foreground/20" />
+          <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase opacity-40">
+            Status: {article.status.toUpperCase()}
           </span>
-        )}
+        </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight italic">
           {article.title}
         </h1>
