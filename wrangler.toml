@@ -9,4 +9,4 @@ database_id = "01234567-89ab-cdef-ghij-0123456789ab" # 실제 배포 시 수정 
 
 [[r2_buckets]]
 binding = "MEDIA"
-bucket_name = "TIMES_ASSETS"
+bucket_name = "wow3dprinting-co-bucket"
