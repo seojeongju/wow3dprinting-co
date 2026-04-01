@@ -44,11 +44,28 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-12 border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-          <p>© 2026 3D Printing Times. All rights reserved.</p>
-          <div className="flex gap-4">
-             <span>Managed by Web Edge Runtime</span>
-             <span>Powered by Cloudflare Pages & D1</span>
+        <div className="mt-12 border-t pt-8 flex flex-col gap-6 text-xs text-muted-foreground">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-b pb-6">
+            <div className="flex flex-col gap-1">
+              <p><span className="font-bold text-foreground">제호:</span> 3D프린팅타임즈</p>
+              <p><span className="font-bold text-foreground">발행소:</span> 서울특별시 마포구 독막로93, 4층</p>
+              <p><span className="font-bold text-foreground">등록번호:</span> 서울, 아03616</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <p><span className="font-bold text-foreground">발행/편집인:</span> 김순희</p>
+              <p><span className="font-bold text-foreground">청소년보호책임자:</span> 김순희</p>
+              <p><span className="font-bold text-foreground">등록/발행일:</span> 2015년 3월 05일</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <p><span className="font-bold text-foreground">전화:</span> (+82) 2-3144-3137</p>
+              <p><span className="font-bold text-foreground">이메일:</span> 3dcookiehd@naver.com</p>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2015-2026 3D Printing Times. All rights reserved.</p>
+            <div className="flex gap-4 uppercase font-bold tracking-tighter">
+               <span>Powered by Cloudflare Pages & D1</span>
+            </div>
           </div>
         </div>
       </div>
