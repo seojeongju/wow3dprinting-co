@@ -64,7 +64,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p>© 2015-2026 3D Printing Times. All rights reserved.</p>
             <div className="flex gap-4 uppercase font-bold tracking-tighter">
-              <span>Powered by wow3d HongDae</span>
+              <span>본 사이트는 이메일주소를 무단수집하는 행위를 거부합니다.[법률 8486호]</span>
             </div>
           </div>
         </div>
