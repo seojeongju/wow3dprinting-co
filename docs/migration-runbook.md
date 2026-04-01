@@ -5,6 +5,15 @@
 - `packages/db/schema.sql`, `packages/db/seed.sql` 적용 완료
 - 운영 관리자 토큰 발급 완료
 
+### Creatorlink(모두) 등 JS로 목록을 그리는 사이트
+정적 HTML만 크롤하면 `/news` 같은 목록 안의 **개별 글 URL이 링크로 잡히지 않을 수 있다.** 이 경우:
+
+1. 브라우저에서 구 사이트 `/news` 등을 연 뒤, 개별 글을 연 상태의 **전체 URL**을 복사한다.
+2. `packages/importer/url-seed.txt`를 만들고 한 줄에 URL 하나씩 넣는다(주석은 `#`으로 시작).
+3. `node packages/importer/src/import.mjs`를 다시 실행한 뒤 R2 업로드·`apply-d1-remote`를 반복한다.
+
+`robots.txt`의 `Sitemap:`(`user-sitemap`) URL은 자동으로 시드에 합쳐진다. 내부 링크는 **www / 비-www** 를 동일 사이트로 처리한다.
+
 ## 1) 콘텐츠 수집
 ```bash
 node packages/importer/src/import.mjs

@@ -1,13 +1,22 @@
 import type { Env } from "./types";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function htmlDocument(title: string, body: string): string {
+  const safe = escapeHtml(title);
   return `<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='24'%3E3%3C/text%3E%3C/svg%3E" />
-  <title>${title}</title>
+  <title>${safe}</title>
 </head>
 <body style="max-width: 960px; margin: 2rem auto; font-family: Arial, sans-serif;">
 ${body}
@@ -75,7 +84,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return new Response(
       htmlDocument(
         article.title,
-        `<a href="/">← 홈</a><h1>${article.title}</h1><p>${article.published_at ?? ""}</p><article>${article.body_html}</article>`
+        `<a href="/">← 홈</a><h1>${escapeHtml(article.title)}</h1><p>${escapeHtml(article.published_at ?? "")}</p><article>${article.body_html}</article>`
       ),
       { headers: { "content-type": "text/html; charset=utf-8" } }
     );
@@ -101,7 +110,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .first<{ title: string; content_html: string }>();
   if (!page) return context.next();
 
-  return new Response(htmlDocument(page.title, `<a href="/">← 홈</a><h1>${page.title}</h1>${page.content_html}`), {
+  return new Response(htmlDocument(page.title, `<a href="/">← 홈</a><h1>${escapeHtml(page.title)}</h1>${page.content_html}`), {
     headers: { "content-type": "text/html; charset=utf-8" }
   });
 };

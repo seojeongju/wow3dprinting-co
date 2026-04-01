@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { extname } from "node:path";
 
@@ -8,6 +8,20 @@ const MEDIA_DIR = new URL("./media/", OUT_DIR);
 
 function stripTags(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/** `<style>` / `<script>` 내부 텍스트는 stripTags로 제거되지 않아 요약에 CSS가 섞이는 문제 방지 */
+function stripScriptsAndStyles(html) {
+  return String(html)
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ");
+}
+
+function excerptFromHtml(html, maxLen) {
+  const plain = stripTags(stripScriptsAndStyles(html)).replace(/\s+/g, " ").trim();
+  if (!plain) return "";
+  return plain.length <= maxLen ? plain : `${plain.slice(0, maxLen - 1)}…`;
 }
 
 function toSlug(title, fallback) {
@@ -47,6 +61,41 @@ function absolutize(url) {
   }
 }
 
+/** www / 비-www 혼용 링크를 동일 사이트로 인식 */
+function sameSiteHostname(hostname) {
+  const h = String(hostname || "").toLowerCase().replace(/^www\./, "");
+  const base = new URL(BASE_URL).hostname.toLowerCase().replace(/^www\./, "");
+  return h === base;
+}
+
+function isSameSiteUrl(url) {
+  try {
+    return sameSiteHostname(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** 큐·visited 일관성: 호스트는 비-www, 끝 슬래시 제거(루트만 '/') */
+function normalizeSiteUrl(url) {
+  const u = new URL(url);
+  u.hostname = u.hostname.replace(/^www\./i, "");
+  if (u.pathname.length > 1 && u.pathname.endsWith("/")) u.pathname = u.pathname.slice(0, -1);
+  return u.toString();
+}
+
+/** 크롤 대상에서 제외 (CSS/JS/폰트·이미지 직링크 등) */
+function isSkippableAsset(url) {
+  try {
+    const p = new URL(url).pathname.toLowerCase();
+    return /\.(css|js|mjs|map|woff2?|ttf|eot|svg|ico|png|jpe?g|gif|webp|mp4|webm|pdf|zip)(\?|$)/i.test(
+      p
+    );
+  } catch {
+    return true;
+  }
+}
+
 async function fetchText(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Fetch failed ${url}: ${res.status}`);
@@ -61,21 +110,62 @@ async function fetchBytes(url) {
   return { bytes, contentType };
 }
 
+/** robots.txt 의 Sitemap: 에서 URL 목록을 가져온다 */
+async function fetchSitemapUrls() {
+  const out = [];
+  try {
+    const robots = await fetchText(`${BASE_URL}/robots.txt`);
+    const sm = robots.match(/Sitemap:\s*(\S+)/i);
+    if (!sm) return out;
+    const xml = await fetchText(sm[1].trim());
+    for (const m of xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)) {
+      out.push(m[1].trim());
+    }
+  } catch (e) {
+    console.warn("sitemap:", e?.message || e);
+  }
+  return out;
+}
+
 function extractLinks(html) {
   const links = new Set();
   const regex = /href="([^"#]+)"/g;
   let m = regex.exec(html);
   while (m) {
     const abs = absolutize(m[1]);
-    if (abs && abs.startsWith(BASE_URL)) links.add(abs);
+    if (abs && isSameSiteUrl(abs) && !isSkippableAsset(abs)) links.add(normalizeSiteUrl(abs));
     m = regex.exec(html);
   }
   return [...links];
 }
 
 function extractTitle(html) {
+  const og =
+    html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
+  if (og?.[1]) {
+    const t = stripTags(og[1]).trim();
+    if (t && !/^untitled$/i.test(t)) return t;
+  }
+  const tw = html.match(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i);
+  if (tw?.[1]) {
+    const t = stripTags(tw[1]).trim();
+    if (t && !/^untitled$/i.test(t)) return t;
+  }
   const m = html.match(/<title[^>]*>(.*?)<\/title>/is);
-  return m ? stripTags(m[1]) : "Untitled";
+  let t = m ? stripTags(m[1]).trim() : "";
+  if (t && !/^untitled$/i.test(t) && t.length > 1) return t;
+  const h1 = html.match(/<h1[^>]*>(.*?)<\/h1>/is);
+  if (h1?.[1]) {
+    const h = stripTags(h1[1]).trim();
+    if (h) return h;
+  }
+  const entry = html.match(/class=["'][^"']*entry-title[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i);
+  if (entry?.[1]) {
+    const e = stripTags(entry[1]).trim();
+    if (e) return e;
+  }
+  return t || "Untitled";
 }
 
 function extractBody(html) {
@@ -100,9 +190,19 @@ function extractImageUrls(html) {
 }
 
 function classify(url, html) {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/$/, "") || "/";
+    if (path === "/") return "page";
+    if (isSkippableAsset(url)) return "page";
+  } catch {
+    /* ignore */
+  }
   const lower = url.toLowerCase();
-  if (/(about|contact|history|biography|client)/.test(lower)) return "page";
-  if (/<article/i.test(html) || /news|title|category/i.test(html)) return "article";
+  if (/(about|contact|history|biography|client|portfolio|intro|config)/.test(lower)) return "page";
+  if (/property=["']og:type["'][^>]+content=["']article["']/i.test(html)) return "article";
+  if (/<article[\s>]/i.test(html)) return "article";
+  if (/\/(news|blog|press|board|post|forum)\/[^/]+/i.test(lower)) return "article";
   return "page";
 }
 
@@ -177,15 +277,35 @@ async function run() {
   await mkdir(MEDIA_DIR, { recursive: true });
 
   const visited = new Set();
-  const queue = [BASE_URL];
+  const seedUrls = [BASE_URL, ...(await fetchSitemapUrls())];
+  let extraSeed = "";
+  try {
+    extraSeed = await readFile(new URL("../url-seed.txt", import.meta.url), "utf-8");
+  } catch {
+    /* optional */
+  }
+  for (const line of extraSeed.split("\n")) {
+    const t = line.trim();
+    if (t && !t.startsWith("#")) {
+      try {
+        seedUrls.push(new URL(t, BASE_URL).toString());
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  const queue = [...new Set(seedUrls.map((u) => normalizeSiteUrl(u)))];
   const pageResults = [];
   const logs = [];
   const mediaManifest = [];
 
   while (queue.length > 0 && visited.size < 400) {
-    const url = queue.shift();
-    if (!url || visited.has(url)) continue;
+    const raw = queue.shift();
+    if (!raw) continue;
+    const url = normalizeSiteUrl(raw);
+    if (visited.has(url)) continue;
     visited.add(url);
+    if (isSkippableAsset(url)) continue;
 
     try {
       const html = await fetchText(url);
@@ -207,7 +327,7 @@ async function run() {
         source_url: url,
         slug,
         title,
-        summary: stripTags(replacedBodyHtml).slice(0, 180),
+        summary: excerptFromHtml(replacedBodyHtml, 180),
         body_html: replacedBodyHtml,
         published_at: new Date().toISOString(),
         image_urls: images,
