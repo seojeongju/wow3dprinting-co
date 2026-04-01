@@ -6,6 +6,7 @@ pages_build_output_dir = ".next"
 binding = "DB"
 database_name = "wow3dprinting-co-db"
 database_id = "d14e50f8-0573-4632-b110-89079094a302"
+migrations_dir = "drizzle/migrations"
 
 [[r2_buckets]]
 binding = "MEDIA"
