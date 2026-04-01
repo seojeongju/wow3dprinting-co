@@ -1,0 +1,16 @@
+{
+  "name": "wow3dprinting-cloudflare-news",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "infra/*"
+  ],
+  "scripts": {
+    "dev": "wrangler pages dev apps/web/public --compatibility-date=2026-03-31 --binding ADMIN_TOKEN=dev-token",
+    "db:migrate": "echo \"Run migrations with wrangler d1 migrations apply\"",
+    "import:legacy": "node packages/importer/src/import.mjs",
+    "qa:migration": "node packages/importer/src/qa-report.mjs"
+  }
+}

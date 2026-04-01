@@ -1,0 +1,18 @@
+{
+  "name": "@wow/importer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "import": "node src/import.mjs",
+    "qa": "node src/qa-report.mjs",
+    "build-redirect-sql": "node src/build-redirect-sql.mjs",
+    "build-d1-load-sql": "node src/build-d1-load-sql.mjs",
+    "build-r2-upload-commands": "node src/build-r2-upload-commands.mjs",
+    "build-seo-files": "node src/build-seo-files.mjs",
+    "upload-r2": "node src/upload-r2.mjs",
+    "run-all": "node src/run-all.mjs",
+    "deploy-all": "node src/deploy-all.mjs",
+    "apply-d1-remote": "node src/apply-d1-remote.mjs"
+  }
+}

@@ -1,0 +1,16 @@
+name = "wow3dprinting-news"
+compatibility_date = "2026-03-31"
+pages_build_output_dir = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wow3dprinting_news"
+database_id = "fc9f25f6-0aee-43b8-b244-278a5431013b"
+
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "wow3dprinting-media"
+
+[vars]
+SITE_NAME = "3D프린팅타임즈"
+ADMIN_EMAIL = "admin@example.com"
