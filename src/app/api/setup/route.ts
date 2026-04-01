@@ -45,7 +45,7 @@ export async function GET() {
         content: '# 환영합니다\n\n이곳은 AI와 3D 프린팅의 미래를 다루는 전문 매체입니다.',
         categoryId: firstCategory.id,
         authorId: 'admin',
-        status: 'draft'
+        status: 'published'
       }).onConflictDoNothing();
     }
 

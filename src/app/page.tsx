@@ -41,41 +41,39 @@ export default async function Home() {
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6 min-h-screen">
-      {/* 바인딩 오류 시 안내 메시지 */}
+      {/* 에러 발생 시에만 경고 표시 */}
       {dbError && (
         <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
-          <p className="font-bold">⚠️ Cloudflare Pages 설정이 필요합니다.</p>
-          <p className="text-sm opacity-80">{dbError}</p>
+          <p className="font-bold">⚠️ 서비스 일시 중단 안내</p>
+          <p className="text-sm opacity-80">데이터베이스 연결에 문제가 발생했습니다. 관리자에게 문의해 주세요.</p>
         </div>
       )}
-      {/* Search Header Placeholder (for visual depth) */}
+
+      {/* Search Header */}
       <div className="mb-12 border-b pb-8">
         <h2 className="text-3xl font-black uppercase tracking-tighter">Technology Intelligence</h2>
-        <p className="text-sm text-muted-foreground">Breaking innovations in AI, Robotics, and Additive Manufacturing.</p>
+        <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em] opacity-60">The Official Voice of wow3dprinting-co</p>
       </div>
 
       {/* Hero Section */}
       {heroArticle ? (
-        <section className="mb-16 grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <section className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-12">
           <div className="lg:col-span-8">
-            <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} />
+            <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} priority />
           </div>
-          <div className="lg:col-span-4 flex flex-col gap-8 divide-y">
-            <h2 className="text-xl font-black uppercase tracking-tighter border-b pb-2">Latest Updates</h2>
+          <div className="lg:col-span-4 flex flex-col gap-10 divide-y">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] border-b pb-2 opacity-50">Latest Updates</h2>
             {remainingArticles.slice(0, 3).map((item) => (
-              <div key={item.article.id} className="pt-4">
-                 <NewsCard article={{ ...item.article, category: item.category }} />
+              <div key={item.article.id} className="pt-6">
+                 <NewsCard article={{ ...item.article, category: item.category }} compact />
               </div>
             ))}
           </div>
         </section>
       ) : (
-        <div className="py-20 text-center border-2 border-dashed rounded-xl bg-muted/20">
-           <h2 className="text-xl font-bold text-muted-foreground italic">No articles published yet.</h2>
-           <p className="text-sm mt-2">Check back soon for the latest in 3D Printing & AI.</p>
-           <div className="mt-8">
-              <a href="/api/setup" className="text-xs bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold">RUN SETUP (DEMO)</a>
-           </div>
+        <div className="py-32 text-center border-2 border-dashed rounded-3xl bg-muted/20">
+           <h2 className="text-2xl font-black italic text-muted-foreground opacity-30">NO INTEL YET</h2>
+           <p className="text-sm mt-4 text-muted-foreground font-medium">Coming soon: The future of 3D Printing & Robotics.</p>
         </div>
       )}
 
