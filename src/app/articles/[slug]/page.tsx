@@ -2,9 +2,9 @@ import { getDb } from '@/lib/db';
 import { articles, categories } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import Markdown from '@/components/Markdown';
 
 export const runtime = 'edge';
 
@@ -79,9 +79,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         </div>
       )}
 
-      <div className="prose prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg">
-        <ReactMarkdown>{article.content}</ReactMarkdown>
-      </div>
+      <Markdown content={article.content} />
 
       <footer className="mt-20 border-t pt-12">
         <h3 className="text-sm font-bold uppercase tracking-widest mb-6">Expert Analysis & Insights</h3>
