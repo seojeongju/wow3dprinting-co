@@ -79,7 +79,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           )}
           <div className="h-px w-8 bg-muted-foreground/20" />
           <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase opacity-40">
-            Status: {article.status.toUpperCase()}
+            Status: {article.status?.toUpperCase() || 'PUBLISHED'}
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight italic">

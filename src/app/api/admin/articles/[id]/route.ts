@@ -16,6 +16,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    const articleId = parseInt(id, 10);
     const user = await getSessionUser();
 
     // 1. 권한 확인
@@ -41,7 +42,7 @@ export async function PATCH(
 
     await db.update(articles)
       .set(updateData)
-      .where(eq(articles.id, id))
+      .where(eq(articles.id, articleId))
       .run();
 
     return NextResponse.json({ success: true, message: '기사가 수정되었습니다.' });
@@ -60,6 +61,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const articleId = parseInt(id, 10);
     const user = await getSessionUser();
 
     // 1. 권한 확인
@@ -72,7 +74,7 @@ export async function DELETE(
     const env = context.env;
 
     // 2. 삭제 전 썸네일 정보 가져오기 (R2 삭제용)
-    const article = await db.select().from(articles).where(eq(articles.id, id)).get();
+    const article = await db.select().from(articles).where(eq(articles.id, articleId)).get();
 
     if (article?.thumbnailKey) {
       try {
@@ -83,7 +85,7 @@ export async function DELETE(
     }
 
     // 3. DB 삭제
-    await db.delete(articles).where(eq(articles.id, id)).run();
+    await db.delete(articles).where(eq(articles.id, articleId)).run();
 
     return NextResponse.json({ success: true, message: '기사가 삭제되었습니다.' });
   } catch (error: any) {

@@ -10,16 +10,30 @@ interface NewsCardProps {
 }
 
 export default function NewsCard({ article, priority, compact }: NewsCardProps) {
-  // 1. 본문에서 첫 번째 마크다운 이미지 URL 추출 (R2 키가 없을 때의 폴백 용도)
-  const extractFirstImage = (content: string) => {
-    const match = content.match(/!\[.*?\]\((.*?)\)/);
-    return match ? match[1] : null;
+  // 1. 본문에서 유효한 첫 번째 마크다운 이미지 URL 추출 (스페이서, 로고 등 제외)
+  const extractValidThumbnail = (content: string) => {
+    const matches = Array.from(content.matchAll(/!\[.*?\]\((.*?)\)/g));
+    
+    // 섬네일로 부적합한 이미지 키워드
+    const excludeKeywords = ['spacer', 'pixel', 'logo', 'icon', 'banner', 'invisible', 'dot.gif', 'loading'];
+
+    for (const match of matches) {
+      const url = match[1];
+      if (!url) continue;
+
+      // 키워드 필터링 (부적합한 이미지는 건너뜀)
+      const isInvalid = excludeKeywords.some(kw => url.toLowerCase().includes(kw));
+      if (!isInvalid) {
+        return url;
+      }
+    }
+    return null;
   };
 
-  const fallbackImage = extractFirstImage(article.content);
+  const fallbackImage = extractValidThumbnail(article.content);
   const imageUrl = article.thumbnailKey 
     ? `/api/assets/${article.thumbnailKey}` 
-    : (fallbackImage || null);
+    : fallbackImage;
 
   // 2. 본문 요약문 정제 (마크다운 이미지, 링크, 특수문자 제거)
   const cleanExcerpt = (content: string) => {
