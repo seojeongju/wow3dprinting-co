@@ -19,6 +19,9 @@ export async function POST(req: Request) {
     const status = formData.get('status') as string || 'draft';
     const authorId = formData.get('authorId') as string || 'admin';
     const password = formData.get('password') as string;
+    // 게시 대상 사이트 (기본값: 'both' - 두 사이트 동시 게시)
+    const targetSitesRaw = formData.get('targetSites') as string || 'both';
+    const targetSites = ['times', 'wow3d', 'both'].includes(targetSitesRaw) ? targetSitesRaw as 'times' | 'wow3d' | 'both' : 'both';
 
     const thumbnail = formData.get('thumbnail') as Blob | null;
 
@@ -70,6 +73,7 @@ export async function POST(req: Request) {
       categoryId,
       authorId,
       status: status as any,
+      targetSites, // 게시 대상 사이트
       thumbnailKey,
       publishedAt: status === 'published' ? new Date() : null,
     };

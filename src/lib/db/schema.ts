@@ -25,6 +25,8 @@ export const articles = sqliteTable('articles', {
   authorId: text('author_id').notNull().references(() => users.id),
   thumbnailKey: text('thumbnail_key'), // R2 object key
   status: text('status', { enum: ['draft', 'published'] }).default('draft'),
+  // 게시 대상 사이트: 'times'(3D프린팅타임즈), 'wow3d'(와우3D프린팅타임즈), 'both'(동시 게시)
+  targetSites: text('target_sites', { enum: ['times', 'wow3d', 'both'] }).default('both').notNull(),
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).$onUpdate(() => new Date()),
 });

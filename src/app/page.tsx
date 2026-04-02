@@ -1,8 +1,10 @@
 import { getDb } from '@/lib/db';
 import { articles, categories } from '@/lib/db/schema';
-import { desc, eq, count } from 'drizzle-orm';
+import { desc, eq, count, or } from 'drizzle-orm';
+import { headers } from 'next/headers';
 import NewsCard from '@/components/NewsCard';
 import Pagination from '@/components/Pagination';
+import Wow3dHomePage from '@/components/Wow3dHomePage';
 import Link from 'next/link';
 import { Zap, TrendingUp, BarChart3, Globe } from 'lucide-react';
 
@@ -10,9 +12,18 @@ export const runtime = 'edge';
 
 const ARTICLES_PER_PAGE = 12; // 1 Hero + 3 Side + 8 Grid
 
-async function getLatestArticles(page: number = 1) {
+/**
+ * 사이트별 기사 조회 필터
+ * - 'times': target_sites가 'times' 또는 'both'인 기사
+ * - 'wow3d': target_sites가 'wow3d' 또는 'both'인 기사
+ */
+async function getLatestArticles(page: number = 1, siteId: 'times' | 'wow3d' = 'times') {
   try {
     const db = getDb();
+    const siteFilter = siteId === 'wow3d'
+      ? or(eq(articles.targetSites, 'wow3d'), eq(articles.targetSites, 'both'))
+      : or(eq(articles.targetSites, 'times'), eq(articles.targetSites, 'both'));
+
     const results = await db
       .select({
         article: articles,
@@ -24,7 +35,7 @@ async function getLatestArticles(page: number = 1) {
       .orderBy(desc(articles.publishedAt))
       .limit(ARTICLES_PER_PAGE)
       .offset((page - 1) * ARTICLES_PER_PAGE);
-    
+
     return results;
   } catch (error) {
     console.error('Fetch Articles Error:', error);
@@ -32,7 +43,7 @@ async function getLatestArticles(page: number = 1) {
   }
 }
 
-async function getTotalArticlesCount() {
+async function getTotalArticlesCount(siteId: 'times' | 'wow3d' = 'times') {
   try {
     const db = getDb();
     const result = await db
@@ -40,7 +51,7 @@ async function getTotalArticlesCount() {
       .from(articles)
       .where(eq(articles.status, 'published'))
       .get();
-    
+
     return result?.value || 0;
   } catch (error) {
     console.error('Count Articles Error:', error);
@@ -48,13 +59,17 @@ async function getTotalArticlesCount() {
   }
 }
 
-export default async function Home({ 
-  searchParams 
-}: { 
-  searchParams: Promise<{ page?: string }> 
+export default async function Home({
+  searchParams
+}: {
+  searchParams: Promise<{ page?: string }>
 }) {
   const params = await searchParams;
   const currentPage = parseInt(params.page || '1', 10);
+
+  // 미들웨어가 주입한 x-site-id 헤더를 읽어 사이트 결정
+  const headersList = await headers();
+  const siteId = (headersList.get('x-site-id') || 'times') as 'times' | 'wow3d';
 
   let latestData: Awaited<ReturnType<typeof getLatestArticles>> = [];
   let totalCount = 0;
@@ -62,8 +77,8 @@ export default async function Home({
 
   try {
     [latestData, totalCount] = await Promise.all([
-      getLatestArticles(currentPage),
-      getTotalArticlesCount()
+      getLatestArticles(currentPage, siteId),
+      getTotalArticlesCount(siteId),
     ]);
   } catch (error: any) {
     console.error('Home Page Error:', error);
@@ -71,11 +86,24 @@ export default async function Home({
   }
 
   const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
+
+  // === 와우3D프린팅타임즈 (wow3dprinting.com) 렌더링 ===
+  if (siteId === 'wow3d') {
+    return (
+      <Wow3dHomePage
+        latestData={latestData}
+        totalPages={totalPages}
+        currentPage={currentPage}
+        dbError={dbError}
+      />
+    );
+  }
+
+  // === 3D프린팅타임즈 (wow3dprinting.co.kr) 렌더링 (기존 유지) ===
   const [heroArticle, ...remainingArticles] = latestData;
   const sideArticles = remainingArticles.slice(0, 3);
   const gridArticles = remainingArticles.slice(3);
 
-  // 시뮬레이션 데이터 생성 (새로고침 시마다 미세하게 변동)
   const techIndex = (1.24 + (Math.random() * 0.1 - 0.05)).toFixed(2);
   const aiAdoption = (84.2 + (Math.random() * 2.0 - 1.0)).toFixed(1);
   const isIndexPositive = parseFloat(techIndex) >= 0;
@@ -124,7 +152,7 @@ export default async function Home({
             </div>
             <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} priority />
           </div>
-          
+
           <div className="lg:col-span-4 lg:sticky lg:top-32">
             <div className="flex items-center justify-between mb-8 border-b border-primary/20 pb-4">
               <h2 className="text-xs font-black uppercase tracking-[0.4em] text-foreground">Latest Briefing</h2>
@@ -135,7 +163,7 @@ export default async function Home({
                 <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} horizontal />
               ))}
             </div>
-            
+
             {/* Newsletter Shortcut Card */}
             <div className="mt-12 p-8 bg-primary rounded-[2.5rem] text-primary-foreground shadow-2xl shadow-primary/20 relative overflow-hidden group">
               <Zap className="absolute -right-4 -top-4 w-24 h-24 opacity-10 rotate-12 transition-transform group-hover:scale-125" />
@@ -161,7 +189,7 @@ export default async function Home({
             <div className="h-px w-24 bg-muted hidden md:block" />
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {(currentPage === 1 ? gridArticles : latestData).map((item) => (
             <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} />
@@ -175,18 +203,18 @@ export default async function Home({
           <div className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground opacity-40">
             Page {currentPage} of {totalPages} Intelligence Layers
           </div>
-          <Pagination 
-            currentPage={currentPage} 
-            totalPages={totalPages} 
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
           />
         </div>
       )}
 
-      {/* 🏙️ Partnership & Advertisement Section (Slim Version) */}
+      {/* Partnership & Advertisement Section */}
       <section className="mb-12 mt-12">
         <div className="relative overflow-hidden rounded-[2rem] bg-[#0A0A0B] p-8 md:p-12 text-white border border-white/5 shadow-2xl">
           <div className="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-[80px]" />
-          
+
           <div className="relative z-10 flex flex-col lg:flex-row gap-10 items-center justify-between">
             <div className="max-w-xl">
               <div className="flex items-center gap-3 mb-4">
@@ -199,7 +227,7 @@ export default async function Home({
                 Connect with the Future of <span className="text-primary">3D Tech.</span>
               </h3>
               <p className="text-white/50 text-[11px] leading-relaxed mb-6">
-                글로벌 기술 리더들에게 귀사의 혁신을 직접 전달하세요. 
+                글로벌 기술 리더들에게 귀사의 혁신을 직접 전달하세요.
                 강력한 AI 오디언스 타겟팅으로 광고 효율을 극대화합니다.
               </p>
               <Link href="mailto:wow3d16@naver.com" className="inline-block bg-primary text-black px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all active:scale-95">
@@ -226,13 +254,13 @@ export default async function Home({
 
       {latestData.length === 0 && (
         <div className="py-40 text-center border-4 border-dashed rounded-[4rem] bg-muted/5 flex flex-col items-center">
-            <div className="w-20 h-20 bg-muted/20 rounded-full flex items-center justify-center mb-8">
-              <Globe className="w-10 h-10 opacity-20 animate-pulse" />
-            </div>
-            <h2 className="text-3xl font-black italic text-muted-foreground opacity-30 uppercase tracking-tighter">Initializing Intelligence Feed</h2>
-            <p className="text-sm mt-4 text-muted-foreground font-medium max-w-sm">
-              인공지능 엔진이 최신 기술 데이터를 동기화하고 있습니다. 잠시만 기다려 주십시오.
-            </p>
+          <div className="w-20 h-20 bg-muted/20 rounded-full flex items-center justify-center mb-8">
+            <Globe className="w-10 h-10 opacity-20 animate-pulse" />
+          </div>
+          <h2 className="text-3xl font-black italic text-muted-foreground opacity-30 uppercase tracking-tighter">Initializing Intelligence Feed</h2>
+          <p className="text-sm mt-4 text-muted-foreground font-medium max-w-sm">
+            인공지능 엔진이 최신 기술 데이터를 동기화하고 있습니다. 잠시만 기다려 주십시오.
+          </p>
         </div>
       )}
     </div>

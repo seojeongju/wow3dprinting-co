@@ -26,6 +26,10 @@ export default function AdminPage() {
     password: '',
   });
 
+  // 게시 대상 사이트 선택 (기본값: 두 사이트 모두)
+  const [publishToTimes, setPublishToTimes] = useState(true);  // 3D프린팅타임즈
+  const [publishToWow3d, setPublishToWow3d] = useState(true);  // 와우3D프린팅타임즈
+
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   // 카테고리 로딩 로직 삭제 (사용 안함)
@@ -58,7 +62,14 @@ export default function AdminPage() {
       Object.entries(formData).forEach(([key, val]) => {
         data.append(key, val);
       });
-      
+
+      // 게시 대상 사이트 결정
+      let targetSites = 'both';
+      if (publishToTimes && !publishToWow3d) targetSites = 'times';
+      if (!publishToTimes && publishToWow3d) targetSites = 'wow3d';
+      if (!publishToTimes && !publishToWow3d) targetSites = 'both'; // 둘 다 비선택 시 기본값
+      data.append('targetSites', targetSites);
+
       if (thumbnailFile) {
         data.append('thumbnail', thumbnailFile);
       }
@@ -183,6 +194,42 @@ export default function AdminPage() {
               <option value="draft">임시저장 (Draft)</option>
               <option value="published">공개 (Published)</option>
             </select>
+          </div>
+        </div>
+
+        {/* 게시 대상 사이트 선택 */}
+        <div className="grid gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+          <label className="text-sm font-black text-primary">📡 게시 대상 사이트</label>
+          <p className="text-xs text-muted-foreground">기사를 게시할 사이트를 선택하세요. 기본값은 두 사이트 동시 게시입니다.</p>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={publishToTimes}
+                onChange={(e) => setPublishToTimes(e.target.checked)}
+                className="w-4 h-4 rounded accent-primary"
+              />
+              <div>
+                <span className="font-bold text-sm">3D프린팅타임즈</span>
+                <span className="ml-2 text-xs text-muted-foreground">wow3dprinting.co.kr</span>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={publishToWow3d}
+                onChange={(e) => setPublishToWow3d(e.target.checked)}
+                className="w-4 h-4 rounded"
+                style={{ accentColor: '#F97316' }}
+              />
+              <div>
+                <span className="font-bold text-sm">와우3D프린팅타임즈</span>
+                <span className="ml-2 text-xs text-muted-foreground">wow3dprinting.com</span>
+              </div>
+            </label>
+          </div>
+          <div className="text-[10px] font-bold text-muted-foreground/60 pt-1 border-t">
+            현재 선택: {publishToTimes && publishToWow3d ? '양쪽 동시 게시' : publishToTimes ? '3D프린팅타임즈만' : publishToWow3d ? '와우3D프린팅타임즈만' : '선택 없음 (동시 게시 처리)'}
           </div>
         </div>
 
