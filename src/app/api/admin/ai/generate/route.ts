@@ -11,16 +11,23 @@ export async function POST(request: NextRequest) {
     const { prompt, searchResults } = await request.json() as { prompt: string, searchResults?: any[] };
     const cfContext = getRequestContext();
     const env = (cfContext?.env || process.env || {}) as any;
-    const apiKey = env.GEMINI_API_KEY;
+    
+    // 환경 변수 이름을 앞뒤 공백 없이 찾아내는 정밀 매칭 함수
+    const findEnvKey = (target: string) => {
+      if (env[target]) return env[target];
+      const cleanKey = Object.keys(env).find(k => k.trim() === target);
+      return cleanKey ? env[cleanKey] : null;
+    };
+
+    const apiKey = findEnvKey('GEMINI_API_KEY');
 
     if (!apiKey) {
-      // 보안을 위해 키 목록만 추출 (값은 제외)
       const availableKeys = Object.keys(env).join(', ');
       const envSource = cfContext?.env ? 'Cloudflare Runtime' : 'Node.js Process';
       
       return NextResponse.json({ 
         success: false, 
-        message: `GEMINI_API_KEY를 찾을 수 없습니다. (Source: ${envSource})\n현재 인식된 변수 목록: [${availableKeys || '없음'}]\n환경 변수 등록 후 반드시 '재배포(Redeploy)'를 완료했는지 확인해 주세요.` 
+        message: `GEMINI_API_KEY를 찾을 수 없습니다. (Source: ${envSource})\n현재 인식된 변수 목록: [${availableKeys || '없음'}]\n환경 변수 이름 앞뒤에 공백이 없는지 대시보드에서 꼭 확인해 주세요.` 
       }, { status: 500 });
     }
 
