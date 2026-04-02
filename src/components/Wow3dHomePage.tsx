@@ -70,9 +70,6 @@ function ArticleImage({ src, alt, className }: { src: string | null; alt: string
         src={imageSrc} 
         alt={alt} 
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        onError={(e) => {
-          (e.target as any).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDcwNzA4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4zRCBURUNIPC90ZXh0Pjwvc3ZnPg==';
-        }}
       />
     </div>
   );
