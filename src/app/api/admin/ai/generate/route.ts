@@ -9,13 +9,16 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const { prompt, searchResults } = await request.json() as { prompt: string, searchResults?: any[] };
-    const context = getRequestContext();
-    const apiKey = (context?.env as any)?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    const cfContext = getRequestContext();
+    // Cloudflare Pages 환경 변수는 context.env에, 로컬 환경 변수는 process.env에 있습니다.
+    const env = (cfContext?.env || process.env) as any;
+    const apiKey = env.GEMINI_API_KEY;
 
     if (!apiKey) {
+      const envSource = cfContext?.env ? 'Cloudflare Runtime' : 'Node.js Process';
       return NextResponse.json({ 
         success: false, 
-        message: 'GEMINI_API_KEY가 설정되지 않았습니다. Cloudflare 설정 또는 .dev.vars를 확인하세요.' 
+        message: `GEMINI_API_KEY를 찾을 수 없습니다. (Source: ${envSource}) 환경 변수 추가 후 반드시 '재배포(Redeploy)'를 진행했는지 확인해 주세요.` 
       }, { status: 500 });
     }
 
