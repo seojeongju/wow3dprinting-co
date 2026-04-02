@@ -10,15 +10,17 @@ export async function POST(request: NextRequest) {
   try {
     const { prompt, searchResults } = await request.json() as { prompt: string, searchResults?: any[] };
     const cfContext = getRequestContext();
-    // Cloudflare Pages 환경 변수는 context.env에, 로컬 환경 변수는 process.env에 있습니다.
-    const env = (cfContext?.env || process.env) as any;
+    const env = (cfContext?.env || process.env || {}) as any;
     const apiKey = env.GEMINI_API_KEY;
 
     if (!apiKey) {
+      // 보안을 위해 키 목록만 추출 (값은 제외)
+      const availableKeys = Object.keys(env).join(', ');
       const envSource = cfContext?.env ? 'Cloudflare Runtime' : 'Node.js Process';
+      
       return NextResponse.json({ 
         success: false, 
-        message: `GEMINI_API_KEY를 찾을 수 없습니다. (Source: ${envSource}) 환경 변수 추가 후 반드시 '재배포(Redeploy)'를 진행했는지 확인해 주세요.` 
+        message: `GEMINI_API_KEY를 찾을 수 없습니다. (Source: ${envSource})\n현재 인식된 변수 목록: [${availableKeys || '없음'}]\n환경 변수 등록 후 반드시 '재배포(Redeploy)'를 완료했는지 확인해 주세요.` 
       }, { status: 500 });
     }
 
