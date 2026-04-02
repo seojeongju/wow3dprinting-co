@@ -80,20 +80,13 @@ export default async function Header() {
             </Link>
             
             <nav className="hidden lg:flex items-center gap-10 text-[11px] font-black tracking-[0.2em] uppercase text-muted-foreground">
-              <Link href="/" className="transition-all hover:text-primary relative group">
-                NEWS & FEED
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full" />
-              </Link>
-              <Link href="/" className="transition-all hover:text-primary relative group">
-                COLUMNS
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full" />
-              </Link>
-              <Link href="/" className="transition-all hover:text-primary relative group">
-                RESOURCES
+              <Link href="/" className="transition-all hover:text-primary relative group flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                INTELLIGENCE FEED
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full" />
               </Link>
               {isAdmin && (
-                <Link href="/admin" className="text-primary flex items-center gap-2 animate-pulse bg-primary/5 px-4 py-2 rounded-xl">
+                <Link href="/admin" className="text-primary flex items-center gap-2 animate-soft-pulse bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
                   <PlusCircle className="w-3.5 h-3.5" />
                   POST ARTICLE
                 </Link>
