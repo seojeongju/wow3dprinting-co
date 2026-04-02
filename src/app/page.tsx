@@ -202,7 +202,7 @@ export default async function Home({
                 글로벌 기술 리더들에게 귀사의 혁신을 직접 전달하세요. 
                 강력한 AI 오디언스 타겟팅으로 광고 효율을 극대화합니다.
               </p>
-              <Link href="mailto:ceo@wow3d.kr" className="inline-block bg-primary text-black px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all active:scale-95">
+              <Link href="mailto:wow3d16@naver.com" className="inline-block bg-primary text-black px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all active:scale-95">
                 광고 등록 및 제휴 문의
               </Link>
             </div>
