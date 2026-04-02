@@ -11,9 +11,12 @@ type Article = {
   title: string;
   slug: string;
   content: string;
+  categoryId?: number | null;
+  authorId?: string;
   thumbnailKey: string | null;
   publishedAt: Date | null;
-  status: string;
+  updatedAt?: Date | null;
+  status: string | null;
   targetSites: string;
 };
 
