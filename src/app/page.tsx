@@ -3,10 +3,11 @@ import { articles, categories } from '@/lib/db/schema';
 import { desc, eq, count } from 'drizzle-orm';
 import NewsCard from '@/components/NewsCard';
 import Pagination from '@/components/Pagination';
+import { Zap, TrendingUp, BarChart3, Globe } from 'lucide-react';
 
 export const runtime = 'edge';
 
-const ARTICLES_PER_PAGE = 12;
+const ARTICLES_PER_PAGE = 11; // 1 Hero + 3 Side + 7 Grid
 
 async function getLatestArticles(page: number = 1) {
   try {
@@ -70,52 +71,102 @@ export default async function Home({
 
   const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
   const [heroArticle, ...remainingArticles] = latestData;
+  const sideArticles = remainingArticles.slice(0, 3);
+  const gridArticles = remainingArticles.slice(3);
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6 min-h-screen">
-      {/* 에러 발생 시에만 경고 표시 */}
-      {dbError && (
-        <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
-          <p className="font-bold">⚠️ 서비스 일시 중단 안내</p>
-          <p className="text-sm opacity-80">데이터베이스 연결에 문제가 발생했습니다. 관리자에게 문의해 주세요.</p>
+      {/* 시스템 스테이터스 바 */}
+      <div className="mb-12 flex items-center justify-between border-y border-primary/10 py-3 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Globe className="w-3 h-3" />
+            GLOBAL TECH INDEX: <span className="text-primary">+1.24%</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2 border-l pl-6">
+            <BarChart3 className="w-3 h-3" />
+            AI ADOPTION RATE: <span className="text-primary">84.2%</span>
+          </div>
         </div>
-      )}
-
-      {/* Search Header */}
-      <div className="mb-12 border-b pb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인사이트</h2>
-          <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">미래 기술을 읽는 3D프린팅타임즈 소식</p>
+        <div className="flex items-center gap-2">
+          <Zap className="w-3 h-3 fill-primary text-primary" />
+          SYSTEM STATUS: <span className="text-primary">OPTiMAL</span>
         </div>
       </div>
 
-      {/* Hero Section - 1페이지에서만 노출 */}
+      {dbError && (
+        <div className="mb-8 p-6 bg-destructive/5 border border-destructive/20 text-destructive rounded-[2rem] flex items-center gap-4">
+          <div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-black uppercase tracking-widest text-xs">CRITICAL CONNECTION ERROR</p>
+            <p className="text-sm opacity-70">데이터베이스 동기화 중 오류가 발생했습니다. 잠시 후 서버가 재기동됩니다.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Spotlight Section */}
       {heroArticle && currentPage === 1 ? (
-        <section className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-12">
+        <section className="mb-24 grid grid-cols-1 gap-16 lg:grid-cols-12 items-start">
           <div className="lg:col-span-8">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-8 h-px bg-primary" />
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary">Spotlight Intelligence</h2>
+            </div>
             <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} priority />
           </div>
-          <div className="lg:col-span-4 flex flex-col gap-10 divide-y">
-            <h2 className="text-xs font-black tracking-[0.3em] border-b pb-2 opacity-50 uppercase">최신 업데이트</h2>
-            {remainingArticles.slice(0, 3).map((item) => (
-              <div key={item.article.id} className="pt-6">
-                 <NewsCard article={{ ...item.article, category: item.category }} compact />
-              </div>
-            ))}
+          
+          <div className="lg:col-span-4 lg:sticky lg:top-32">
+            <div className="flex items-center justify-between mb-8 border-b border-primary/20 pb-4">
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] text-foreground">Latest Briefing</h2>
+              <TrendingUp className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex flex-col gap-2">
+              {sideArticles.map((item) => (
+                <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} horizontal />
+              ))}
+            </div>
+            
+            {/* Newsletter Shortcut Card */}
+            <div className="mt-12 p-8 bg-primary rounded-[2.5rem] text-primary-foreground shadow-2xl shadow-primary/20 relative overflow-hidden group">
+              <Zap className="absolute -right-4 -top-4 w-24 h-24 opacity-10 rotate-12 transition-transform group-hover:scale-125" />
+              <h3 className="text-xl font-black italic tracking-tighter leading-tight mb-4">
+                Stay Ahead <br />of the Tech Curve
+              </h3>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-6">
+                매일 아침 3D 프린팅 AI 인사이트를 보내드립니다.
+              </p>
+              <button className="w-full bg-white text-primary py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/90 transition-all">
+                JOIN THE RADAR
+              </button>
+            </div>
           </div>
         </section>
       ) : null}
 
-      {/* Grid Section */}
-      <section className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-20">
-        {(currentPage === 1 ? remainingArticles.slice(3) : latestData).map((item) => (
-          <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} />
-        ))}
+      {/* Primary Intelligence Grid */}
+      <section className="mb-32">
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl font-black italic tracking-tighter uppercase">Intelligence Radar</h2>
+            <div className="h-px w-24 bg-muted hidden md:block" />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {(currentPage === 1 ? gridArticles : latestData).map((item) => (
+            <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} />
+          ))}
+        </div>
       </section>
 
       {/* Pagination UI */}
       {totalPages > 1 && (
-        <div className="mt-12 py-12 border-t flex justify-center">
+        <div className="mt-12 py-20 border-t border-muted-foreground/10 flex flex-col items-center gap-8">
+          <div className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground opacity-40">
+            Page {currentPage} of {totalPages} Intelligence Layers
+          </div>
           <Pagination 
             currentPage={currentPage} 
             totalPages={totalPages} 
@@ -124,9 +175,14 @@ export default async function Home({
       )}
 
       {latestData.length === 0 && (
-        <div className="py-32 text-center border-2 border-dashed rounded-3xl bg-muted/20">
-           <h2 className="text-2xl font-black italic text-muted-foreground opacity-30 uppercase">기사 데이터 로드 대기 중</h2>
-           <p className="text-sm mt-4 text-muted-foreground font-medium">관리자 시스템에서 마이그레이션이 원활하게 진행 중입니다.</p>
+        <div className="py-40 text-center border-4 border-dashed rounded-[4rem] bg-muted/5 flex flex-col items-center">
+            <div className="w-20 h-20 bg-muted/20 rounded-full flex items-center justify-center mb-8">
+              <Globe className="w-10 h-10 opacity-20 animate-pulse" />
+            </div>
+            <h2 className="text-3xl font-black italic text-muted-foreground opacity-30 uppercase tracking-tighter">Initializing Intelligence Feed</h2>
+            <p className="text-sm mt-4 text-muted-foreground font-medium max-w-sm">
+              인공지능 엔진이 최신 기술 데이터를 동기화하고 있습니다. 잠시만 기다려 주십시오.
+            </p>
         </div>
       )}
     </div>
