@@ -59,7 +59,7 @@ ${searchContext}
 데이터가 부족하면 일반적인 기술 지식을 바탕으로 풍성하게 작성해줘.
 `;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(geminiUrl, {
       method: 'POST',
@@ -72,7 +72,10 @@ ${searchContext}
           }
         ],
         generationConfig: {
-          responseMimeType: "application/json",
+          // 호환성 문제를 위해 responseMimeType은 제외하고 프롬프트 지시 및 자체 파싱 로직에 의존합니다.
+          temperature: 0.7,
+          topP: 0.8,
+          topK: 40
         }
       }),
     });
