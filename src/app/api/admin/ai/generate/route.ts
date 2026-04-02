@@ -37,10 +37,9 @@ export async function POST(request: NextRequest) {
 
 응답은 반드시 JSON 형식이어야 합니다. 필드:
 {
-  "title": "기능하고 매력적인 제목",
+  "title": "기학하고 매력적인 제목",
   "slug": "영어-소문자-하이픈-형식-슬러그",
-  "content": "마크다운 본문 (서론, 본론, 분석, 결론 포함)",
-  "categoryId": "카테고리 추천 (번호 문자열, 기본값 '1')"
+  "content": "마크다운 본문 (서론, 본론, 분석, 결론 포함)"
 }
 `;
 

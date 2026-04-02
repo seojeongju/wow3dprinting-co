@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Sparkles, Search, Loader2, ListPlus, Newspaper, Copy } from 'lucide-react';
 
 interface AiToolboxProps {
-  onApply: (data: { title: string; slug: string; content: string; categoryId: string }) => void;
+  onApply: (data: { title: string; slug: string; content: string }) => void;
 }
 
 export default function AiToolbox({ onApply }: AiToolboxProps) {
@@ -52,7 +52,6 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
         title: string; 
         slug: string; 
         content: string; 
-        categoryId: string;
         message?: string;
       };
       if (data.success) {
@@ -60,7 +59,6 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
           title: data.title,
           slug: data.slug,
           content: data.content,
-          categoryId: data.categoryId,
         });
         alert('AI가 기사 초안을 작성하여 폼에 입력했습니다!');
       } else {

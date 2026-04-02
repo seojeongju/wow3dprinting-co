@@ -14,14 +14,15 @@ export async function POST(req: Request) {
     const title = formData.get('title') as string;
     const slug = formData.get('slug') as string;
     const content = formData.get('content') as string;
-    const categoryId = parseInt(formData.get('categoryId') as string, 10);
+    const categoryIdRaw = formData.get('categoryId');
+    const categoryId = categoryIdRaw ? parseInt(categoryIdRaw as string, 10) : null;
     const status = formData.get('status') as string || 'draft';
     const authorId = formData.get('authorId') as string || 'admin';
     const password = formData.get('password') as string;
 
     const thumbnail = formData.get('thumbnail') as Blob | null;
 
-    // TODO: 간단한 비밀번호 검증 (실 환경에서는 env.ADMIN_PASSWORD나 Cloudflare Access ব্যবহার)
+    // TODO: 간단한 비밀번호 검증 (실 환경에서는 env.ADMIN_PASSWORD나 Cloudflare Access 사용)
     const context = getRequestContext() as any;
     const env = context.env;
     
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: '인증 실패: 잘못된 비밀번호입니다.' }, { status: 401 });
     }
 
-    if (!title || !slug || !content || isNaN(categoryId)) {
+    if (!title || !slug || !content) {
       return NextResponse.json({ success: false, message: '필수 필드가 누락되었습니다.' }, { status: 400 });
     }
 

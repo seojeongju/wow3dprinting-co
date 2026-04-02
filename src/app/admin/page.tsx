@@ -13,8 +13,7 @@ interface Category {
 
 export default function AdminPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,32 +22,13 @@ export default function AdminPage() {
     title: '',
     slug: '',
     content: '',
-    categoryId: '',
     status: 'draft',
     password: '',
   });
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
-  // 컴포넌트 마운트 시 카테고리 로드
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        const res = await fetch('/api/categories');
-        const data = await res.json() as any;
-        if (data.success) {
-          setCategories(data.categories);
-        } else {
-          setError(data.message || '카테고리를 불러올 수 없습니다.');
-        }
-      } catch (err: any) {
-        setError('카테고리 로딩 중 네트워크 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadCategories();
-  }, []);
+  // 카테고리 로딩 로직 삭제 (사용 안함)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -97,7 +77,6 @@ export default function AdminPage() {
           title: '',
           slug: '',
           content: '',
-          categoryId: '',
           status: 'draft',
           password: formData.password,
         });
@@ -143,8 +122,7 @@ export default function AdminPage() {
             ...prev,
             title: data.title,
             slug: data.slug,
-            content: data.content,
-            categoryId: data.categoryId
+            content: data.content
           }));
         }}
       />
@@ -194,22 +172,6 @@ export default function AdminPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="grid gap-2">
-            <label className="text-sm font-bold">카테고리 *</label>
-            <select
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-              required
-              className="border p-2 rounded-md bg-background focus:ring-2 focus:ring-primary outline-none"
-            >
-              <option value="" disabled>카테고리 선택</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
           <div className="grid gap-2">
             <label className="text-sm font-bold">발행 상태 *</label>
             <select
