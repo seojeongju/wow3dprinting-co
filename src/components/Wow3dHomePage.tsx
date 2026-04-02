@@ -78,16 +78,7 @@ function ArticleImage({ src, fallbackContent, alt, className }: { src: string | 
   const fallback = fallbackContent ? extractValidThumbnail(fallbackContent) : null;
   const imageSrc = getProcessedImageUrl(src, fallback);
   
-  if (!imageSrc) {
-    return (
-      <div className={`flex flex-col items-center justify-center ${className} relative`}
-           style={{ background: '#F8F9FA' }}>
-        <div className="text-gray-200 font-black text-6xl italic select-none">3D</div>
-        <div className="absolute inset-0 opacity-[0.03]" 
-             style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #000 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-      </div>
-    );
-  }
+  if (!imageSrc) return null;
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -152,10 +143,14 @@ function DigitalBrandingHero() {
 // Magazine Grid Card (White Theme)
 function MagazineCard({ item }: { item: ArticleWithCategory }) {
   const { article, category } = item;
+  const hasImage = article.thumbnailKey || extractValidThumbnail(article.content);
+
   return (
     <Link href={`/articles/${article.slug}`} className="group flex flex-col h-full bg-white border border-gray-100 rounded-3xl overflow-hidden hover:border-[#FF5D00]/30 hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
-      <ArticleImage src={article.thumbnailKey} fallbackContent={article.content} alt={article.title} className="aspect-[16/10] w-full" />
-      <div className="p-7 flex-1 flex flex-col">
+      {hasImage && (
+        <ArticleImage src={article.thumbnailKey} fallbackContent={article.content} alt={article.title} className="aspect-[16/10] w-full" />
+      )}
+      <div className={`p-7 flex-1 flex flex-col ${!hasImage ? 'pt-10' : ''}`}>
         {category && (
           <div className="text-[9px] font-black text-[#FF5D00] uppercase tracking-[0.25em] mb-4">
             {category.name}
@@ -299,12 +294,6 @@ export default function Wow3dHomePage({
           </div>
 
           {feedRest.length === 0 && currentPage > 1 && (
-            <div className="py-40 text-center border-2 border-dashed border-gray-100 rounded-[4rem] bg-gray-50/50">
-               <Cpu className="w-16 h-16 text-gray-200 mx-auto mb-8 animate-pulse" />
-               <p className="text-xl font-black uppercase italic tracking-widest text-gray-300">No Data Synchronized Yet</p>
-            </div>
-          )}
-        </section>
             <div className="py-40 text-center border-2 border-dashed border-gray-100 rounded-[4rem] bg-gray-50/50">
                <Cpu className="w-16 h-16 text-gray-200 mx-auto mb-8 animate-pulse" />
                <p className="text-xl font-black uppercase italic tracking-widest text-gray-300">No Data Synchronized Yet</p>
