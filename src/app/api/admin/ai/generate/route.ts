@@ -46,7 +46,7 @@ ${context}
 데이터가 부족하면 일반적인 기술 지식을 바탕으로 풍성하게 작성해줘.
 `;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(geminiUrl, {
       method: 'POST',
