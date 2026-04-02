@@ -33,6 +33,10 @@ export default function AdminPage() {
   const [articles, setArticles] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'draft'>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
+  
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
     title: '',
@@ -58,6 +62,11 @@ export default function AdminPage() {
     // 상단 폼으로 스크롤
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // 탭 변경 시 페이지 초기화
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   // 수정 취소
   const handleCancelEdit = () => {
@@ -394,7 +403,7 @@ export default function AdminPage() {
       </form>
 
       {/* 기사 관리 섹션 */}
-      <div className="mt-20 border-t pt-20 mb-32">
+      <div id="management-section" className="mt-20 border-t pt-20 mb-32">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-black italic tracking-tighter">Contents Cloud Management</h2>
@@ -418,55 +427,109 @@ export default function AdminPage() {
         </div>
 
         <div className="grid gap-4">
-          {articles
-            .filter(a => activeTab === 'all' || a.status === 'draft')
-            .map((item) => (
-              <div key={item.id} className="group bg-white border border-gray-100 p-6 rounded-[2rem] hover:border-primary/20 hover:shadow-xl transition-all duration-500">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex-1 flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.status === 'published' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600 animate-pulse'}`}>
-                        {item.status}
-                      </span>
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-gray-300">
-                        {(item.targetSites === 'times' || item.targetSites === 'both') && <Globe className="w-3 h-3 text-blue-400" />}
-                        {(item.targetSites === 'wow3d' || item.targetSites === 'both') && <Laptop className="w-3 h-3 text-orange-400" />}
-                        <span className="ml-1 uppercase tracking-tighter">{item.targetSites}</span>
+          {(() => {
+            const filtered = articles.filter(a => activeTab === 'all' || a.status === 'draft');
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+            return (
+              <>
+                {paginated.map((item) => (
+                  <div key={item.id} className="group bg-white border border-gray-100 p-6 rounded-[2rem] hover:border-primary/20 hover:shadow-xl transition-all duration-500">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex-1 flex flex-col gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.status === 'published' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600 animate-pulse'}`}>
+                            {item.status}
+                          </span>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-300">
+                            {(item.targetSites === 'times' || item.targetSites === 'both') && <Globe className="w-3 h-3 text-blue-400" />}
+                            {(item.targetSites === 'wow3d' || item.targetSites === 'both') && <Laptop className="w-3 h-3 text-orange-400" />}
+                            <span className="ml-1 uppercase tracking-tighter">{item.targetSites}</span>
+                          </div>
+                        </div>
+                        <h3 className="text-base font-black text-gray-800 leading-snug group-hover:text-primary transition-colors line-clamp-1">{item.title}</h3>
+                        <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
+                          <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || (item as any).id).toLocaleDateString('ko-KR')}</span>
+                          <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> {item.slug}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => handleLoadForEdit(item)}
+                          className="shrink-0 flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-sm border border-blue-100"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          내용 수정하기
+                        </button>
+                        <a 
+                          href={`/articles/${item.slug}`}
+                          target="_blank"
+                          className="p-3 bg-muted/20 text-muted-foreground rounded-xl hover:bg-muted transition-colors border"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                        <button 
+                          onClick={() => handleDelete(item.id)}
+                          className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100"
+                          title="기사 삭제"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <h3 className="text-base font-black text-gray-800 leading-snug group-hover:text-primary transition-colors line-clamp-1">{item.title}</h3>
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400">
-                      <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || (item as any).id).toLocaleDateString('ko-KR')}</span>
-                      <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> {item.slug}</span>
+                  </div>
+                ))}
+
+                {/* 페이지네이션 컨트롤 */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-12 pb-10">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => {
+                        setCurrentPage(prev => Math.max(1, prev - 1));
+                        document.getElementById('management-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="p-2.5 rounded-xl border bg-white disabled:opacity-30 hover:bg-muted transition-colors"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180" />
+                    </button>
+                    
+                    <div className="flex gap-1.5">
+                      {Array.from({ length: totalPages }).map((_, i) => (
+                        <button
+                          key={i + 1}
+                          onClick={() => {
+                            setCurrentPage(i + 1);
+                            document.getElementById('management-section')?.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className={`w-10 h-10 rounded-xl text-[10px] font-black transition-all border ${
+                            currentPage === i + 1 
+                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                              : 'bg-white text-muted-foreground hover:border-gray-300'
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => handleLoadForEdit(item)}
-                      className="shrink-0 flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-sm border border-blue-100"
+
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => {
+                        setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                        document.getElementById('management-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="p-2.5 rounded-xl border bg-white disabled:opacity-30 hover:bg-muted transition-colors"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      내용 수정하기
-                    </button>
-                    <a 
-                      href={`/articles/${item.slug}`}
-                      target="_blank"
-                      className="p-3 bg-muted/20 text-muted-foreground rounded-xl hover:bg-muted transition-colors border"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100"
-                      title="기사 삭제"
-                    >
-                      <Trash2 className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
-                </div>
-              </div>
-          ))}
+                )}
+              </>
+            );
+          })()}
 
           {articles.length === 0 && (
              <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-[3rem] bg-gray-50/20">
