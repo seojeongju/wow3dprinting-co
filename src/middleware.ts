@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 /**
  * 멀티 사이트 미들웨어
  * 접속 도메인(Host 헤더)을 감지하여 x-site-id 헤더를 주입합니다.
