@@ -60,9 +60,6 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               {category.description}
             </p>
           )}
-          <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-muted rounded text-muted-foreground tracking-widest">
-            Total {totalArticles}
-          </span>
         </div>
       </div>
 

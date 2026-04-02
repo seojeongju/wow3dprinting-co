@@ -87,12 +87,6 @@ export default async function Home({
           <h2 className="text-3xl font-black uppercase tracking-tighter">기술 인사이트</h2>
           <p className="text-sm text-muted-foreground font-medium tracking-[0.2em] opacity-60">미래 기술을 읽는 3D프린팅타임즈 소식</p>
         </div>
-        <div className="px-4 py-2 bg-primary/5 border border-primary/20 rounded-2xl flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-          <span className="text-xs font-bold tracking-widest text-primary uppercase">
-            전체 게시물: {totalCount.toLocaleString()}건
-          </span>
-        </div>
       </div>
 
       {/* Hero Section - 1페이지에서만 노출 */}
