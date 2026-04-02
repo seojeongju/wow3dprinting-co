@@ -1,10 +1,7 @@
-'use client';
-
 import Link from 'next/link';
-import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Clock, Eye, ArrowRight, Flame, TrendingUp, Star, ChevronRight } from 'lucide-react';
+import { Clock, Eye, ArrowRight, TrendingUp, Cpu, Zap, Share2, Layers, Award, Radio } from 'lucide-react';
 
 type Article = {
   id: number;
@@ -32,14 +29,15 @@ interface Wow3dHomePageProps {
   dbError: string | null;
 }
 
-function getExcerpt(content: string, maxLen = 80) {
+// 고성능 마크다운 요약기 (이미지/링크 완벽 제거)
+function getExcerpt(content: string, maxLen = 120) {
   const plain = content
-    .replace(/!\[.*?\]\(.*?\)/g, '')   // 마크다운 이미지 제거 ![alt](url)
-    .replace(/\[.*?\]\(.*?\)/g, '')    // 마크다운 링크 제거 [text](url)
-    .replace(/https?:\/\/\S+/g, '')    // 남은 URL 제거
-    .replace(/[#*`>\-_]/g, '')         // 마크다운 특수문자 제거
-    .replace(/\n+/g, ' ')              // 줄바꿈 → 공백
-    .replace(/\s{2,}/g, ' ')           // 다중 공백 정리
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    .replace(/\[.*?\]\(.*?\)/g, '')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/[#*`>\-_]/g, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
     .trim();
   return plain.length > maxLen ? plain.slice(0, maxLen) + '...' : plain;
 }
@@ -51,138 +49,151 @@ function timeAgo(date: Date | null) {
   } catch { return ''; }
 }
 
-// 와우3D 전용 기사 카드 (메인 Hero)
-function HeroCard({ item }: { item: ArticleWithCategory }) {
+// 프리미엄 이미지 렌더러 (Fallback 및 올바른 경로 처리)
+function ArticleImage({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
+  const imageSrc = src ? `/api/assets/${src}` : null;
+  
+  if (!imageSrc) {
+    return (
+      <div className={`flex flex-col items-center justify-center ${className}`}
+           style={{ background: 'linear-gradient(135deg, #0A0A0B 0%, #1A1B23 100%)' }}>
+        <div className="text-white/5 font-black text-6xl italic select-none">3D</div>
+        <div className="absolute inset-0 opacity-20" 
+             style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <img 
+        src={imageSrc} 
+        alt={alt} 
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        onError={(e) => {
+          (e.target as any).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDcwNzA4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4zRCBURUNIPC90ZXh0Pjwvc3ZnPg==';
+        }}
+      />
+    </div>
+  );
+}
+
+// Spotlight Hero Component (Ultrawide)
+function SpotlightHero({ item }: { item: ArticleWithCategory }) {
   const { article, category } = item;
   return (
-    <Link href={`/articles/${article.slug}`} className="relative group block rounded-3xl overflow-hidden"
-      style={{ minHeight: 420 }}>
-      {/* 썸네일 */}
-      <div className="absolute inset-0 w-full h-full">
-        {article.thumbnailKey ? (
-          <img src={`/api/media/${article.thumbnailKey}`} alt={article.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        ) : (
-          <div className="w-full h-full" style={{
-            background: 'linear-gradient(135deg, #7C2D12 0%, #EA580C 50%, #F97316 100%)'
-          }} />
-        )}
+    <Link href={`/articles/${article.slug}`} className="relative group block rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-orange-600/10">
+      <div className="h-[520px] w-full">
+        <ArticleImage src={article.thumbnailKey} alt={article.title} className="w-full h-full" />
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to top, rgba(15,5,0,0.95) 0%, rgba(15,5,0,0.6) 40%, rgba(15,5,0,0.1) 100%)'
+          background: 'linear-gradient(to bottom, rgba(8,8,10,0) 0%, rgba(8,8,10,0.6) 40%, rgba(8,8,10,0.95) 90%, #08080A 100%)'
         }} />
       </div>
 
-      {/* 컨텐츠 */}
-      <div className="relative flex flex-col justify-end h-full p-8" style={{ minHeight: 420 }}>
-        {category && (
-          <span className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit"
-            style={{ background: '#F97316', color: 'white' }}>
-            <Flame className="w-2.5 h-2.5 fill-white" />
-            {category.name}
-          </span>
-        )}
-        <h2 className="text-2xl md:text-3xl font-black text-white leading-tight mb-3 group-hover:text-orange-300 transition-colors">
-          {article.title}
-        </h2>
-        <p className="text-sm text-orange-100/60 leading-relaxed mb-4 hidden md:block">
-          {getExcerpt(article.content, 100)}
-        </p>
-        <div className="flex items-center gap-4 text-[11px] text-orange-200/40 font-medium">
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(article.publishedAt)}</span>
-          <span className="flex items-center gap-1"><Eye className="w-3 h-3" />조회 1.2K</span>
-        </div>
-      </div>
-
-      {/* 호버 화살표 */}
-      <div className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0"
-        style={{ background: '#F97316' }}>
-        <ArrowRight className="w-4 h-4 text-white" />
-      </div>
-    </Link>
-  );
-}
-
-// 와우3D 전용 기사 카드 (리스트형)
-function ListCard({ item, rank }: { item: ArticleWithCategory; rank?: number }) {
-  const { article, category } = item;
-  return (
-    <Link href={`/articles/${article.slug}`}
-      className="flex gap-4 p-4 rounded-2xl group transition-all hover:bg-orange-500/5"
-      style={{ border: '1px solid rgba(249,115,22,0.08)' }}>
-      {rank !== undefined && (
-        <span className="text-4xl font-black leading-none shrink-0 w-8 text-center"
-          style={{ color: rank < 3 ? '#F97316' : 'rgba(249,115,22,0.2)' }}>
-          {rank + 1}
-        </span>
-      )}
-      <div className="flex gap-3 flex-1 min-w-0">
-        {article.thumbnailKey && (
-          <div className="w-20 h-16 rounded-xl overflow-hidden shrink-0">
-            <img src={`/api/media/${article.thumbnailKey}`} alt=""
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
+      <div className="absolute bottom-0 left-0 w-full p-8 md:p-14">
+        <div className="flex items-center gap-3 mb-6">
           {category && (
-            <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#F97316' }}>
+            <span className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-orange-600 text-white shadow-lg">
               {category.name}
             </span>
           )}
-          <h3 className="text-sm font-bold text-orange-50/90 leading-snug mt-1 group-hover:text-orange-300 transition-colors line-clamp-2">
-            {article.title}
-          </h3>
-          <span className="text-[10px] text-orange-200/30 mt-1 block">{timeAgo(article.publishedAt)}</span>
+          <span className="flex items-center gap-2 text-[10px] font-black text-white/40 tracking-widest uppercase">
+            <Radio className="w-3.5 h-3.5 text-orange-600 animate-pulse" />
+            Spotlight Intel
+          </span>
+        </div>
+        
+        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6 max-w-4xl group-hover:translate-x-2 transition-transform duration-500">
+          {article.title}
+        </h1>
+        
+        <div className="flex flex-col md:flex-row md:items-center gap-8">
+          <p className="text-sm md:text-base text-white/50 leading-relaxed max-w-2xl line-clamp-2">
+            {getExcerpt(article.content, 180)}
+          </p>
+          <div className="shrink-0 flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-white/30 border-l border-white/10 pl-8">
+            <div className="flex flex-col">
+              <span className="text-orange-600 mb-1">Time</span>
+              <span>{timeAgo(article.publishedAt)}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-orange-600 mb-1">Impact</span>
+              <span>High_Value</span>
+            </div>
+          </div>
         </div>
       </div>
     </Link>
   );
 }
 
-// 와우3D 전용 기사 카드 (그리드형)
-function GridCard({ item }: { item: ArticleWithCategory }) {
+// Advanced Grid Card
+function MagazineCard({ item }: { item: ArticleWithCategory }) {
   const { article, category } = item;
   return (
-    <Link href={`/articles/${article.slug}`}
-      className="group flex flex-col rounded-2xl overflow-hidden transition-all hover:-translate-y-1"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(249,115,22,0.08)' }}>
-      {/* 이미지 */}
-      <div className="relative overflow-hidden aspect-video">
-        {article.thumbnailKey ? (
-          <img src={`/api/media/${article.thumbnailKey}`} alt={article.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1C0A00, #7C2D12)' }}>
-            <span className="text-4xl font-black italic" style={{ color: 'rgba(249,115,22,0.2)' }}>3D</span>
+    <Link href={`/articles/${article.slug}`} className="group flex flex-col h-full bg-[#111114] border border-white/5 rounded-3xl overflow-hidden hover:border-orange-600/30 transition-all duration-300">
+      <ArticleImage src={article.thumbnailKey} alt={article.title} className="aspect-[4/3] w-full" />
+      <div className="p-6 flex-1 flex flex-col">
+        {category && (
+          <div className="text-[9px] font-black text-orange-600 uppercase tracking-[0.25em] mb-3">
+            {category.name}
           </div>
         )}
-        {category && (
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
-            style={{ background: 'rgba(249,115,22,0.9)', color: 'white' }}>
-            {category.name}
-          </span>
-        )}
-      </div>
-      {/* 내용 */}
-      <div className="p-5 flex flex-col gap-2 flex-1">
-        <h3 className="text-sm font-bold text-orange-50/90 leading-snug group-hover:text-orange-300 transition-colors line-clamp-2">
+        <h3 className="text-base font-black text-white/90 leading-snug group-hover:text-white transition-colors mb-4 line-clamp-2">
           {article.title}
         </h3>
-        <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: 'rgba(255,200,150,0.4)' }}>
-          {getExcerpt(article.content)}
+        <p className="text-[11px] text-white/30 leading-relaxed line-clamp-2 mb-6">
+          {getExcerpt(article.content, 80)}
         </p>
-        <div className="flex items-center justify-between mt-auto pt-3"
-          style={{ borderTop: '1px solid rgba(249,115,22,0.08)' }}>
-          <span className="text-[10px] flex items-center gap-1" style={{ color: 'rgba(249,115,22,0.4)' }}>
-            <Clock className="w-3 h-3" />{timeAgo(article.publishedAt)}
-          </span>
-          <span className="flex items-center gap-1 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ color: '#F97316' }}>
-            읽기 <ChevronRight className="w-3 h-3" />
-          </span>
+        <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-[9px] font-black text-white/20 uppercase tracking-widest">
+            <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" />{timeAgo(article.publishedAt)}</span>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-600 transition-colors">
+            <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white transition-colors" />
+          </div>
         </div>
       </div>
     </Link>
+  );
+}
+
+// Side Ranking Bar
+function TrendingBar({ items }: { items: ArticleWithCategory[] }) {
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white/30 flex items-center gap-3 italic">
+           <TrendingUp className="w-4 h-4 text-orange-600" />
+           Live Pulse
+        </h2>
+        <div className="flex gap-1">
+          <div className="w-1 h-1 rounded-full bg-orange-600" />
+          <div className="w-1 h-1 rounded-full bg-orange-600/30" />
+          <div className="w-1 h-1 rounded-full bg-orange-600/10" />
+        </div>
+      </div>
+      
+      <div className="flex flex-col gap-5">
+        {items.map((item, i) => (
+          <Link key={item.article.id} href={`/articles/${item.article.slug}`} className="flex gap-5 group items-start">
+            <span className="text-3xl font-black italic select-none" style={{ color: i < 3 ? 'rgba(255,93,0,0.4)' : 'rgba(255,255,255,0.05)' }}>
+              {(i + 1).toString().padStart(2, '0')}
+            </span>
+            <div className="flex-1">
+              <h4 className="text-[13px] font-bold text-white/60 leading-snug group-hover:text-orange-500 transition-colors line-clamp-2">
+                {item.article.title}
+              </h4>
+              <div className="mt-2 flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-white/10">
+                <span>{item.category?.name || 'In-Deep'}</span>
+                <span>•</span>
+                <span className="text-orange-600/30 underline decoration-orange-600/10">Read Intel</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -192,173 +203,120 @@ export default function Wow3dHomePage({
   currentPage,
   dbError,
 }: Wow3dHomePageProps) {
-  const [hero, second, ...rest] = latestData;
-  const topArticles = rest.slice(0, 5);
-  const gridArticles = rest.slice(5);
+  const [hero, ...rest] = latestData;
+  const trending = rest.slice(0, 5);
+  const others = rest.slice(5);
 
   return (
-    <div className="min-h-screen" style={{ background: '#0F0500', color: '#FFF7ED' }}>
-      {/* 전역 스타일 */}
-      <style>{`
-        .wow3d-page * { box-sizing: border-box; }
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .anim-fade-up { animation: fadeInUp 0.5s ease-out forwards; }
-      `}</style>
-
-      <div className="wow3d-page container mx-auto px-4 py-8 md:px-6">
-
-        {/* === 메인 Hero 섹션 === */}
-        {latestData.length > 0 && currentPage === 1 && (
-          <section className="mb-12">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              {/* Hero 기사 (2/3) */}
-              {hero && (
-                <div className="lg:col-span-2 anim-fade-up">
-                  <HeroCard item={hero} />
-                </div>
-              )}
-
-              {/* 두 번째 기사 + 인기 랭킹 (1/3) */}
-              <div className="flex flex-col gap-4">
-                {/* 두 번째 기사 */}
-                {second && (
-                  <Link href={`/articles/${second.article.slug}`}
-                    className="relative rounded-2xl overflow-hidden group"
-                    style={{ minHeight: 200 }}>
-                    {second.article.thumbnailKey ? (
-                      <img src={`/api/media/${second.article.thumbnailKey}`} alt=""
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #431407, #EA580C)' }} />
-                    )}
-                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(15,5,0,0.9), transparent)' }} />
-                    <div className="relative p-5 flex flex-col justify-end h-full" style={{ minHeight: 200 }}>
-                      {second.category && (
-                        <span className="text-[10px] font-black uppercase" style={{ color: '#F97316' }}>
-                          {second.category.name}
-                        </span>
-                      )}
-                      <h3 className="text-base font-black text-white leading-tight mt-1 group-hover:text-orange-300 transition-colors line-clamp-2">
-                        {second.article.title}
-                      </h3>
-                    </div>
-                  </Link>
-                )}
-
-                {/* 🔥 현재 인기 */}
-                <div className="flex-1 rounded-2xl p-5" style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.1)' }}>
-                  <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-4 h-4" style={{ color: '#F97316' }} />
-                    <h3 className="text-xs font-black tracking-widest uppercase text-orange-300/70">지금 인기</h3>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {topArticles.slice(0, 4).map((item, i) => (
-                      <ListCard key={item.article.id} item={item} rank={i} />
-                    ))}
-                  </div>
-                </div>
-              </div>
+    <div className="min-h-screen pb-24" style={{ background: '#08080A' }}>
+      <main className="container mx-auto px-4 md:px-6">
+        
+        {/* Intelligence Status Header */}
+        <div className="py-12 flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 opacity-50 mb-12">
+            <div className="flex items-center gap-8">
+               <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white">
+                  <div className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
+                  Satellite_Active
+               </div>
+               <div className="hidden lg:flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/40 border-l border-white/10 pl-8">
+                  <Award className="w-3 h-3" />
+                  Premium_Media_Access
+               </div>
             </div>
-          </section>
+            <div className="mt-4 md:mt-0 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
+               <Layers className="w-3 h-3" />
+               Current_Layer: <span className="text-white/60">0x{currentPage.toString(16).toUpperCase()}</span>
+            </div>
+        </div>
+
+        {currentPage === 1 && latestData.length > 0 && (
+          <>
+            {/* Phase 1: Wide Hero */}
+            <section className="mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+               <SpotlightHero item={hero} />
+            </section>
+
+            {/* Phase 2: Trending & Mixed Grid */}
+            <section className="mb-32 grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+               <div className="lg:col-span-8 flex flex-col gap-12">
+                  <div className="flex items-center gap-4">
+                     <span className="w-12 h-0.5 bg-orange-600" />
+                     <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Advanced Intel Feed</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     {others.slice(0, 4).map((item) => (
+                       <MagazineCard key={item.article.id} item={item} />
+                     ))}
+                  </div>
+               </div>
+               
+               <aside className="lg:col-span-4 lg:sticky lg:top-32 h-fit bg-[#0F0F12] border border-white/5 p-10 rounded-[2.5rem]">
+                  <TrendingBar items={trending} />
+                  
+                  {/* Premium Recruitment/Ad Card */}
+                  <div className="mt-12 p-8 rounded-3xl bg-orange-600 shadow-2xl shadow-orange-600/20 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+                     <Zap className="relative w-8 h-8 text-white mb-4 fill-white" />
+                     <h3 className="relative text-xl font-black text-white italic tracking-tighter mb-4">와우3D 기사 제보 <br />&amp; 기술 광고</h3>
+                     <p className="relative text-[10px] font-bold uppercase tracking-widest text-white/60 mb-8">혁신적인 3D 기술을 공유하십시오.</p>
+                     <Link href="mailto:wow3d16@naver.com" className="relative block w-full py-4 bg-white text-orange-600 text-[10px] font-black uppercase tracking-[0.2em] text-center rounded-xl hover:bg-white/90 transition-colors">
+                        Connect with Radar
+                     </Link>
+                  </div>
+               </aside>
+            </section>
+          </>
         )}
 
-        {/* === 뉴스레터 배너 === */}
-        {currentPage === 1 && (
-          <section className="mb-12">
-            <div className="relative overflow-hidden rounded-3xl p-8 md:p-10"
-              style={{ background: 'linear-gradient(135deg, #7C2D12 0%, #C2410C 50%, #F97316 100%)' }}>
-              <div className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
-              <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
-                <div>
-                  <p className="text-[10px] font-black tracking-[0.3em] uppercase text-orange-200/60 mb-2">NEWSLETTER</p>
-                  <h3 className="text-2xl font-black text-white leading-tight">
-                    3D 프린팅 트렌드를<br />매일 아침 받아보세요
-                  </h3>
-                </div>
-                <div className="flex gap-2 w-full md:w-auto">
-                  <input type="email" placeholder="이메일 주소 입력"
-                    className="flex-1 md:w-64 px-5 py-3.5 rounded-xl text-sm outline-none"
-                    style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }} />
-                  <button className="px-6 py-3.5 rounded-xl text-sm font-black transition-all active:scale-95"
-                    style={{ background: 'white', color: '#EA580C' }}>
-                    구독
-                  </button>
-                </div>
-              </div>
+        {/* Phase 3: Secondary Intelligence Grid */}
+        <section className="mb-32 container mx-auto px-0">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-600 text-glow">Intelligence Radar</p>
+              <h2 className="text-4xl font-black text-white tracking-tighter italic lg:text-5xl">Deep Dive Archives</h2>
             </div>
-          </section>
-        )}
-
-        {/* === 기사 그리드 === */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-6 rounded-full" style={{ background: '#F97316' }} />
-              <h2 className="text-lg font-black text-white">
-                {currentPage === 1 ? '최신 뉴스' : `페이지 ${currentPage}`}
-              </h2>
-            </div>
-            <Link href="/" className="flex items-center gap-1 text-xs font-bold transition-colors hover:text-orange-400"
-              style={{ color: 'rgba(249,115,22,0.6)' }}>
-              전체보기 <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {(currentPage === 1 ? gridArticles : latestData).map((item) => (
-              <GridCard key={item.article.id} item={item} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {(currentPage === 1 ? others.slice(4) : latestData).map((item) => (
+              <MagazineCard key={item.article.id} item={item} />
             ))}
           </div>
 
-          {(currentPage === 1 ? gridArticles : latestData).length === 0 && (
-            <div className="py-24 text-center rounded-3xl"
-              style={{ border: '2px dashed rgba(249,115,22,0.15)' }}>
-              <div className="text-5xl mb-4">🖨️</div>
-              <p className="font-bold text-orange-200/40">아직 기사가 없습니다</p>
+          {(currentPage === 1 ? others.slice(4) : latestData).length === 0 && (
+            <div className="py-40 text-center border-2 border-dashed border-white/5 rounded-[4rem] bg-white/5 bg-glow-orange opacity-30">
+               <Cpu className="w-16 h-16 text-white mx-auto mb-8 animate-pulse" />
+               <p className="text-xl font-black uppercase italic tracking-widest text-white">Scanning for data streams...</p>
             </div>
           )}
         </section>
 
-        {/* === 페이지네이션 === */}
+        {/* Global Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 pb-12">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Link key={page} href={`/?page=${page}`}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black transition-all"
-                style={
-                  page === currentPage
-                    ? { background: '#F97316', color: 'white' }
-                    : { background: 'rgba(249,115,22,0.08)', color: 'rgba(249,115,22,0.5)', border: '1px solid rgba(249,115,22,0.1)' }
-                }>
-                {page}
-              </Link>
-            ))}
+          <div className="mt-12 py-20 border-t border-white/5 flex flex-col items-center gap-12">
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Link key={page} href={`/?page=${page}`}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-[11px] font-black transition-all"
+                  style={
+                    page === currentPage
+                      ? { background: 'white', color: 'black', boxShadow: '0 0 20px rgba(255,255,255,0.1)' }
+                      : { background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.05)' }
+                  }>
+                  {page.toString().padStart(2, '0')}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
+      </main>
 
-        {/* === 광고/제휴 섹션 === */}
-        <section className="mb-8">
-          <div className="rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-8"
-            style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.12)' }}>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'rgba(249,115,22,0.5)' }}>PARTNERSHIP</span>
-              <h3 className="text-xl font-black text-white mt-1">
-                3D 프린팅 제품/서비스를<br />
-                <span style={{ color: '#F97316' }}>와우3D에 홍보하세요</span>
-              </h3>
-            </div>
-            <Link href="mailto:wow3d16@naver.com"
-              className="shrink-0 px-8 py-3.5 rounded-2xl text-sm font-black text-white transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 8px 20px rgba(249,115,22,0.3)' }}>
-              광고 문의
-            </Link>
-          </div>
-        </section>
-      </div>
+      <style>{`
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .text-glow { text-shadow: 0 0 20px rgba(255,93,0,0.4); }
+        .bg-glow-orange { box-shadow: inset 0 0 100px rgba(255,93,0,0.05); }
+      `}</style>
     </div>
   );
 }
