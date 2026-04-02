@@ -33,7 +33,14 @@ interface Wow3dHomePageProps {
 }
 
 function getExcerpt(content: string, maxLen = 80) {
-  const plain = content.replace(/[#*`>\-_\[\]()!]/g, '').replace(/\n+/g, ' ').trim();
+  const plain = content
+    .replace(/!\[.*?\]\(.*?\)/g, '')   // 마크다운 이미지 제거 ![alt](url)
+    .replace(/\[.*?\]\(.*?\)/g, '')    // 마크다운 링크 제거 [text](url)
+    .replace(/https?:\/\/\S+/g, '')    // 남은 URL 제거
+    .replace(/[#*`>\-_]/g, '')         // 마크다운 특수문자 제거
+    .replace(/\n+/g, ' ')              // 줄바꿈 → 공백
+    .replace(/\s{2,}/g, ' ')           // 다중 공백 정리
+    .trim();
   return plain.length > maxLen ? plain.slice(0, maxLen) + '...' : plain;
 }
 
