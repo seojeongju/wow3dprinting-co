@@ -12,6 +12,7 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [error, setError] = useState('');
 
   const handleSearch = async () => {
@@ -27,6 +28,8 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
       const data = await res.json() as { success: boolean; results: any[]; message?: string };
       if (data.success) {
         setSearchResults(data.results);
+        // 검색 완료 시 모든 항목을 기본으로 선택
+        setSelectedIndices(data.results.map((_, i) => i));
       } else {
         throw new Error(data.message);
       }
@@ -37,15 +40,42 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
     }
   };
 
+  const toggleSelection = (index: number) => {
+    setSelectedIndices(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    );
+  };
+
+  const toggleAll = () => {
+    if (selectedIndices.length === searchResults.length) {
+      setSelectedIndices([]);
+    } else {
+      setSelectedIndices(searchResults.map((_, i) => i));
+    }
+  };
+
   const handleGenerate = async () => {
     if (!keyword) return;
+    
+    // 선택된 자료만 필터링
+    const filteredResults = searchResults.filter((_, i) => selectedIndices.includes(i));
+    
+    // 자료가 하나도 선택되지 않았을 경우 확인
+    if (filteredResults.length === 0 && searchResults.length > 0) {
+      if (!confirm('선택된 참고 자료가 없습니다. 검색된 자료 없이 키워드만으로 기사를 작성하시겠습니까?')) {
+        return;
+      }
+    }
+
     setIsGenerating(true);
     setError('');
     try {
       const res = await fetch('/api/admin/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: keyword, searchResults }),
+        body: JSON.stringify({ prompt: keyword, searchResults: filteredResults }),
       });
       const data = await res.json() as { 
         success: boolean; 
@@ -60,7 +90,7 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
           slug: data.slug,
           content: data.content,
         });
-        alert('AI가 기사 초안을 작성하여 폼에 입력했습니다!');
+        alert('AI가 선택된 자료를 분석하여 기사 초안을 작성했습니다!');
       } else {
         throw new Error(data.message);
       }
@@ -110,17 +140,47 @@ export default function AiToolbox({ onApply }: AiToolboxProps) {
 
         {searchResults.length > 0 && (
           <div className="space-y-3 bg-white p-4 rounded-2xl border shadow-sm">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b pb-2 flex items-center gap-2">
-              <Newspaper className="w-3 h-3" />
-              수집된 관련 소식 ({searchResults.length})
-            </h4>
-            <div className="max-h-40 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
-              {searchResults.map((res, i) => (
-                <div key={i} className="text-xs">
-                  <p className="font-bold text-foreground line-clamp-1">{res.title}</p>
-                  <p className="text-muted-foreground opacity-70 line-clamp-1">{res.snippet}</p>
-                </div>
-              ))}
+            <div className="flex items-center justify-between border-b pb-2">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                <Newspaper className="w-3 h-3" />
+                수집된 관련 소식 ({searchResults.length})
+              </h4>
+              <button 
+                onClick={toggleAll}
+                className="text-[9px] font-bold text-primary hover:underline px-2 py-1"
+              >
+                {selectedIndices.length === searchResults.length ? '전체 해제' : '전체 선택'}
+              </button>
+            </div>
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-2 scrollbar-hide">
+              {searchResults.map((res, i) => {
+                const isSelected = selectedIndices.includes(i);
+                return (
+                  <div 
+                    key={i} 
+                    onClick={() => toggleSelection(i)}
+                    className={`group flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:shadow-md ${
+                      isSelected 
+                        ? 'border-primary/40 bg-primary/[0.02]' 
+                        : 'border-transparent bg-muted/10 opacity-60 grayscale'
+                    }`}
+                  >
+                    <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                      isSelected ? 'bg-primary border-primary text-white' : 'border-muted-foreground/30 bg-white'
+                    }`}>
+                      {isSelected && <Copy className="w-2.5 h-2.5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-bold text-xs line-clamp-1 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {res.title}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground opacity-70 line-clamp-2 mt-1 italic">
+                        {res.snippet}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
