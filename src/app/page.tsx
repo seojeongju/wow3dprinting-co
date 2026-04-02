@@ -74,6 +74,11 @@ export default async function Home({
   const sideArticles = remainingArticles.slice(0, 3);
   const gridArticles = remainingArticles.slice(3);
 
+  // 시뮬레이션 데이터 생성 (새로고침 시마다 미세하게 변동)
+  const techIndex = (1.24 + (Math.random() * 0.1 - 0.05)).toFixed(2);
+  const aiAdoption = (84.2 + (Math.random() * 2.0 - 1.0)).toFixed(1);
+  const isIndexPositive = parseFloat(techIndex) >= 0;
+
   return (
     <div className="container mx-auto px-4 py-12 md:px-6 min-h-screen">
       {/* 시스템 스테이터스 바 */}
@@ -81,16 +86,18 @@ export default async function Home({
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Globe className="w-3 h-3" />
-            GLOBAL TECH INDEX: <span className="text-primary">+1.24%</span>
+            GLOBAL TECH INDEX: <span className={isIndexPositive ? 'text-primary' : 'text-destructive'}>
+              {isIndexPositive ? '+' : ''}{techIndex}%
+            </span>
           </div>
           <div className="hidden md:flex items-center gap-2 border-l pl-6">
             <BarChart3 className="w-3 h-3" />
-            AI ADOPTION RATE: <span className="text-primary">84.2%</span>
+            AI ADOPTION RATE: <span className="text-primary">{aiAdoption}%</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Zap className="w-3 h-3 fill-primary text-primary" />
-          SYSTEM STATUS: <span className="text-primary">OPTiMAL</span>
+          SYSTEM STATUS: <span className="text-primary uppercase">Active_Link_{Math.floor(Math.random() * 900) + 100}</span>
         </div>
       </div>
 
