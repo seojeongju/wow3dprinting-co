@@ -1,0 +1,27 @@
+﻿Usage: @cloudflare/next-on-pages [options]
+
+@cloudflare/next-on-pages CLI v.1.13.16
+
+Options:
+  -s, --skip-build                   Skips the application Vercel build process
+                                     (only runs the @cloudflare/next-on-pages
+                                     build logic)
+  -m, --disable-worker-minification  Disables the minification of the
+                                     _worker.js script performed to reduce its
+                                     javascript size (this option is generally
+                                     useful only for debugging purposes)
+  -w, --watch                        Automatically rebuilds when the project is
+                                     edited
+  -c, --no-color                     Disables colored console outputs
+  -i, --info                         Prints relevant details about the current
+                                     system which can be used to report bugs
+  -o, --outdir <path>                Sets the directory to output the worker
+                                     and static assets to (default:
+                                     ".vercel\\output\\static")
+  --custom-entrypoint <path>         Wrap the generated worker for your
+                                     application in a custom worker entrypoint
+  -v, --version                      Shows the version of the package
+  -h, --help                         Shows this help message
+
+GitHub: https://github.com/cloudflare/next-on-pages
+Docs: https://developers.cloudflare.com/pages/framework-guides/deploy-a-nextjs-site

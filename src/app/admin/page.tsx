@@ -4,6 +4,7 @@ export const runtime = 'edge';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AiToolbox from '@/components/AiToolbox';
 
 interface Category {
   id: number;
@@ -134,6 +135,19 @@ export default function AdminPage() {
           {success}
         </div>
       )}
+
+      {/* AI 어시스턴트 도구 상자 */}
+      <AiToolbox 
+        onApply={(data) => {
+          setFormData(prev => ({
+            ...prev,
+            title: data.title,
+            slug: data.slug,
+            content: data.content,
+            categoryId: data.categoryId
+          }));
+        }}
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-muted/20 p-6 rounded-lg border">
         
