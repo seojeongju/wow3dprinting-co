@@ -40,12 +40,12 @@ export default function AdminPage() {
     password: '',
   });
 
-  // 기사 목록 불러오기
+  // 기사 목록 불러오기 (비밀번호 미설정 환경에서도 동작)
   const fetchArticles = useCallback(async () => {
-    // 비밀번호가 있을 때만 요청 (보안)
-    if (!formData.password) return;
     try {
-      const res = await fetch(`/api/admin/articles?password=${encodeURIComponent(formData.password)}`);
+      // 비밀번호가 있으면 포함, 없으면 빈 문자열로 전송 (서버에서 ADMIN_PASSWORD 미설정 시 통과)
+      const params = formData.password ? `?password=${encodeURIComponent(formData.password)}` : '';
+      const res = await fetch(`/api/admin/articles${params}`);
       if (res.ok) {
         const data = await res.json() as any;
         if (data.success) {
@@ -57,11 +57,12 @@ export default function AdminPage() {
     }
   }, [formData.password]);
 
-  // 비밀번호 입력 시 또는 등록 성공 시 목록 갱신
+  // 페이지 로드 시 즉시 실행 + 비밀번호 변경 시 재실행
   useEffect(() => {
+    fetchArticles(); // 즉시 실행
     const timer = setTimeout(() => {
       fetchArticles();
-    }, 1000);
+    }, 500);
     return () => clearTimeout(timer);
   }, [fetchArticles]);
 
