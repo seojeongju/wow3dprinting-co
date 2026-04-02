@@ -51,13 +51,36 @@ function timeAgo(date: Date | null) {
   } catch { return ''; }
 }
 
+const extractValidThumbnail = (content: string) => {
+  const matches = Array.from(content.matchAll(/!\[.*?\]\(([^" \)]+).*?\)/g));
+  const excludeKeywords = ['spacer', 'pixel', 'logo', 'icon', 'banner', 'invisible', 'dot.gif', 'loading'];
+
+  for (const match of matches) {
+    let url = match[1]?.trim();
+    if (!url) continue;
+    const isInvalid = excludeKeywords.some(kw => url.toLowerCase().includes(kw));
+    if (!isInvalid) return url;
+  }
+  return null;
+};
+
+const getProcessedImageUrl = (key: string | null, fallback: string | null) => {
+  let rawUrl = key || fallback;
+  if (!rawUrl) return null;
+  rawUrl = rawUrl.trim();
+  if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `/api/assets/${rawUrl}`;
+};
+
 // 프리미엄 이미지 렌더러 (Fallback 및 올바른 경로 처리)
-function ArticleImage({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
-  const imageSrc = src ? `/api/assets/${src}` : null;
+function ArticleImage({ src, fallbackContent, alt, className }: { src: string | null; fallbackContent?: string; alt: string; className?: string }) {
+  const fallback = fallbackContent ? extractValidThumbnail(fallbackContent) : null;
+  const imageSrc = getProcessedImageUrl(src, fallback);
   
   if (!imageSrc) {
     return (
-      <div className={`flex flex-col items-center justify-center ${className}`}
+      <div className={`flex flex-col items-center justify-center ${className} relative`}
            style={{ background: '#F8F9FA' }}>
         <div className="text-gray-200 font-black text-6xl italic select-none">3D</div>
         <div className="absolute inset-0 opacity-[0.03]" 
@@ -83,7 +106,7 @@ function SpotlightHero({ item }: { item: ArticleWithCategory }) {
   return (
     <Link href={`/articles/${article.slug}`} className="relative group block rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(255,93,0,0.15)]">
       <div className="h-[clamp(400px,65vh,720px)] w-full">
-        <ArticleImage src={article.thumbnailKey} alt={article.title} className="w-full h-full" />
+        <ArticleImage src={article.thumbnailKey} fallbackContent={article.content} alt={article.title} className="w-full h-full" />
         <div className="absolute inset-0" style={{
           background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0.9) 85%, #FFFFFF 100%)'
         }} />
@@ -131,7 +154,7 @@ function MagazineCard({ item }: { item: ArticleWithCategory }) {
   const { article, category } = item;
   return (
     <Link href={`/articles/${article.slug}`} className="group flex flex-col h-full bg-white border border-gray-100 rounded-3xl overflow-hidden hover:border-[#FF5D00]/30 hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
-      <ArticleImage src={article.thumbnailKey} alt={article.title} className="aspect-[16/10] w-full" />
+      <ArticleImage src={article.thumbnailKey} fallbackContent={article.content} alt={article.title} className="aspect-[16/10] w-full" />
       <div className="p-7 flex-1 flex flex-col">
         {category && (
           <div className="text-[9px] font-black text-[#FF5D00] uppercase tracking-[0.25em] mb-4">
