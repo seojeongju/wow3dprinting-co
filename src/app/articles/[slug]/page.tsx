@@ -9,6 +9,7 @@ export const runtime = 'edge';
 
 async function getArticle(slug: string) {
   const db = getDb();
+  const decodedSlug = decodeURIComponent(slug); // 한글 슬러그 디코딩 추가
   const results = await db
     .select({
       article: articles,
@@ -16,7 +17,7 @@ async function getArticle(slug: string) {
     })
     .from(articles)
     .leftJoin(categories, eq(articles.categoryId, categories.id))
-    .where(eq(articles.slug, slug))
+    .where(eq(articles.slug, decodedSlug))
     .limit(1);
 
   return results[0];

@@ -70,6 +70,69 @@ export async function DELETE(req: Request) {
   }
 }
 
+export async function PUT(req: Request) {
+  try {
+    const formData = await req.formData();
+    const id = formData.get('id');
+    const password = formData.get('password');
+    const title = formData.get('title') as string;
+    const content = formData.get('content') as string;
+    const status = formData.get('status') as string;
+    const slug = formData.get('slug') as string;
+    const targetSites = formData.get('targetSites') as string;
+    const thumbnail = formData.get('thumbnail') as File | null;
+
+    if (!id) return NextResponse.json({ success: false, message: 'ID가 필요합니다.' }, { status: 400 });
+
+    const context = getRequestContext() as any;
+    const env = context.env;
+    if (env.ADMIN_PASSWORD && password !== env.ADMIN_PASSWORD) {
+      return NextResponse.json({ success: false, message: '인증 실패' }, { status: 401 });
+    }
+
+    const db = getDb();
+    const articleId = parseInt(id as string, 10);
+    
+    // 1. 기존 기사 조회
+    const oldArticle = await db.select().from(articles).where(eq(articles.id, articleId)).get();
+    if (!oldArticle) return NextResponse.json({ success: false, message: '기사를 찾을 수 없습니다.' }, { status: 404 });
+
+    // 2. 썸네일 업로드 처리
+    let thumbnailKey = oldArticle.thumbnailKey;
+    if (thumbnail && thumbnail.size > 0) {
+      // 기존 R2 썸네일이 있다면 삭제
+      if (oldArticle.thumbnailKey && !oldArticle.thumbnailKey.startsWith('http')) {
+        try { await env.MEDIA.delete(oldArticle.thumbnailKey); } catch {}
+      }
+      
+      const key = `articles/${Date.now()}-${thumbnail.name}`;
+      await env.MEDIA.put(key, thumbnail.stream());
+      thumbnailKey = key;
+    }
+
+    // 3. 데이터 업데이트
+    const updateData: any = {
+      title,
+      content,
+      status,
+      slug,
+      targetSites,
+      thumbnailKey,
+      updatedAt: new Date(),
+    };
+
+    if (status === 'published' && oldArticle.status !== 'published') {
+      updateData.publishedAt = new Date();
+    }
+
+    await db.update(articles).set(updateData).where(eq(articles.id, articleId)).run();
+
+    return NextResponse.json({ success: true, message: '기사가 수정되었습니다.' });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: '수정 오류', error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();

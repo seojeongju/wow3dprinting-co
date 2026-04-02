@@ -32,6 +32,7 @@ export default function AdminPage() {
   const [success, setSuccess] = useState('');
   const [articles, setArticles] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'draft'>('all');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -40,6 +41,36 @@ export default function AdminPage() {
     status: 'draft',
     password: '',
   });
+
+  // 수정용 기사 데이터 로드
+  const handleLoadForEdit = (item: any) => {
+    setEditingId(item.id);
+    setFormData({
+      title: item.title,
+      slug: item.slug,
+      content: item.content,
+      status: item.status,
+      password: formData.password, // 패스워드는 유지
+    });
+    setPublishToTimes(item.targetSites === 'times' || item.targetSites === 'both');
+    setPublishToWow3d(item.targetSites === 'wow3d' || item.targetSites === 'both');
+    
+    // 상단 폼으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 수정 취소
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({
+      title: '',
+      slug: '',
+      content: '',
+      status: 'draft',
+      password: formData.password,
+    });
+    setThumbnailFile(null);
+  };
 
   // 기사 목록 불러오기 (비밀번호 미설정 환경에서도 동작)
   const fetchArticles = useCallback(async () => {
@@ -126,9 +157,16 @@ export default function AdminPage() {
 
     try {
       const data = new FormData();
-      Object.entries(formData).forEach(([key, val]) => {
-        data.append(key, val);
-      });
+      // 수정 시 ID 추가
+      if (editingId) {
+        data.append('id', editingId.toString());
+      }
+      
+      data.append('title', formData.title);
+      data.append('slug', formData.slug);
+      data.append('content', formData.content);
+      data.append('status', formData.status);
+      data.append('password', formData.password);
 
       // 게시 대상 사이트 결정
       let targetSites = 'both';
@@ -142,26 +180,20 @@ export default function AdminPage() {
       }
 
       const res = await fetch('/api/admin/articles', {
-        method: 'POST',
+        method: editingId ? 'PUT' : 'POST',
         body: data,
       });
 
       const result = await res.json() as any;
 
       if (res.ok && result.success) {
-        setSuccess('기사가 성공적으로 등록되었습니다!');
+        setSuccess(editingId ? '기사가 성공적으로 수정되었습니다!' : '기사가 성공적으로 등록되었습니다!');
         fetchArticles(); // 목록 즉시 갱신
-        // 폼 초기화 (비밀번호 제외)
-        setFormData({
-          title: '',
-          slug: '',
-          content: '',
-          status: 'draft',
-          password: formData.password,
-        });
-        setThumbnailFile(null);
+        
+        // 폼 초기화 (수정 완료 후 초기화 로직 실행)
+        handleCancelEdit();
       } else {
-        setError(result.message || '기사 등록에 실패했습니다.');
+        setError(result.message || '작업에 실패했습니다.');
       }
     } catch (err: any) {
       setError('서버와 통신 중 문제가 발생했습니다.');
@@ -176,7 +208,9 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-black mb-8 border-b pb-4">기사 등록 대시보드</h1>
+      <h1 className={`text-3xl font-black mb-8 border-b pb-4 ${editingId ? 'text-blue-600' : ''}`}>
+        {editingId ? '기사 수정 모드 (Editing)' : '기사 등록 대시보드'}
+      </h1>
       
       {error && (
         <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6 font-bold text-sm">
@@ -321,20 +355,41 @@ export default function AdminPage() {
         </div>
 
         <div className="pt-4 flex justify-end gap-4 border-t">
-           <button
-             type="button"
-             onClick={() => router.push('/')}
-             className="px-6 py-2 rounded-md border font-bold hover:bg-muted transition-colors"
-           >
-             취소
-           </button>
-           <button
-             type="submit"
-             disabled={submitting}
-             className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
-           >
-             {submitting ? '업로드 중...' : '기사 등록 (Submit)'}
-           </button>
+           {editingId ? (
+             <>
+               <button
+                 type="button"
+                 onClick={handleCancelEdit}
+                 className="px-6 py-2 rounded-md border font-bold hover:bg-muted transition-colors"
+               >
+                 수정 취소
+               </button>
+               <button
+                 type="submit"
+                 disabled={submitting}
+                 className="px-6 py-2 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+               >
+                 {submitting ? '수정 중...' : '기사 수정 완료 (Update)'}
+               </button>
+             </>
+           ) : (
+             <>
+               <button
+                 type="button"
+                 onClick={() => router.push('/')}
+                 className="px-6 py-2 rounded-md border font-bold hover:bg-muted transition-colors"
+               >
+                 취소
+               </button>
+               <button
+                 type="submit"
+                 disabled={submitting}
+                 className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+               >
+                 {submitting ? '업로드 중...' : '기사 등록 (Submit)'}
+               </button>
+             </>
+           )}
         </div>
       </form>
 
@@ -388,11 +443,11 @@ export default function AdminPage() {
                   
                   <div className="flex items-center gap-3">
                     <button 
-                      onClick={() => router.push(`/articles/${item.slug}`)}
-                      className="shrink-0 flex items-center gap-2 px-6 py-3 bg-muted/30 rounded-xl text-[10px] font-black uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all shadow-sm"
+                      onClick={() => handleLoadForEdit(item)}
+                      className="shrink-0 flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-sm border border-blue-100"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                      편집 바로가기
+                      내용 수정하기
                     </button>
                     <a 
                       href={`/articles/${item.slug}`}
