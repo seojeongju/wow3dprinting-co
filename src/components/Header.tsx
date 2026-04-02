@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Search, Menu, Radio, PlusCircle, Zap, Bell, Cpu, Monitor } from 'lucide-react';
+import { Search, Menu, Radio, PlusCircle, Zap, Bell, Cpu } from 'lucide-react';
 import { getSessionUser } from '@/lib/auth_edge';
 import { getDb } from '@/lib/db';
 import { articles } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
 
 async function getLatestTickerArticles() {
   try {
@@ -28,6 +29,17 @@ export default async function Header() {
   const user = await getSessionUser();
   const isAdmin = user?.role === 'admin' || user?.role === 'editor';
   const tickerArticles = await getLatestTickerArticles();
+
+  // host 헤더로 사이트 분기
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const isWow3d = host.includes('wow3dprinting.com') && !host.includes('.co.kr');
+
+  // 사이트별 테마 설정
+  const siteName = isWow3d ? '와우3D' : '3D';
+  const siteSubtitle = isWow3d ? '프린팅타임즈' : 'PRINTING';
+  const siteTagline = isWow3d ? 'TIMES ・ PREMIUM' : 'TIMES AI INTELLIGENCE';
+  const primaryColor = isWow3d ? '#F97316' : undefined; // 오렌지 vs 기본 teal
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -70,12 +82,28 @@ export default async function Header() {
         <div className="flex h-20 items-center justify-between py-4">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center space-x-2 group">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-all">
-                <span className="text-xl font-black text-primary">3D</span>
+              <div
+                className="flex items-center justify-center w-10 h-10 rounded-xl transition-all"
+                style={{
+                  background: isWow3d ? 'rgba(249,115,22,0.1)' : undefined,
+                  backgroundColor: isWow3d ? undefined : 'rgba(var(--primary-rgb, 0,207,209),0.1)',
+                }}
+              >
+                <span
+                  className="text-xl font-black"
+                  style={{ color: isWow3d ? '#F97316' : undefined }}
+                >
+                  {isWow3d ? '우' : '3D'}
+                </span>
               </div>
               <span className="text-2xl font-black tracking-tighter text-foreground flex flex-col leading-none">
-                PRINTING
-                <span className="text-[10px] tracking-[0.4em] font-light text-primary/60">TIMES AI INTELLIGENCE</span>
+                {isWow3d ? '와우3D프린팅' : 'PRINTING'}
+                <span
+                  className="text-[10px] tracking-[0.4em] font-light"
+                  style={{ color: isWow3d ? 'rgba(249,115,22,0.6)' : undefined }}
+                >
+                  {siteTagline}
+                </span>
               </span>
             </Link>
             

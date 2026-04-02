@@ -67,9 +67,11 @@ export default async function Home({
   const params = await searchParams;
   const currentPage = parseInt(params.page || '1', 10);
 
-  // 미들웨어가 주입한 x-site-id 헤더를 읽어 사이트 결정
+  // host 헤더를 직접 읽어 사이트 분기 (미들웨어보다 안정적)
   const headersList = await headers();
-  const siteId = (headersList.get('x-site-id') || 'times') as 'times' | 'wow3d';
+  const host = headersList.get('host') || '';
+  const siteId: 'times' | 'wow3d' =
+    host.includes('wow3dprinting.com') && !host.includes('.co.kr') ? 'wow3d' : 'times';
 
   let latestData: Awaited<ReturnType<typeof getLatestArticles>> = [];
   let totalCount = 0;
