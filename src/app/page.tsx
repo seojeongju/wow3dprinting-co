@@ -3,6 +3,7 @@ import { articles, categories } from '@/lib/db/schema';
 import { desc, eq, count } from 'drizzle-orm';
 import NewsCard from '@/components/NewsCard';
 import Pagination from '@/components/Pagination';
+import Link from 'next/link';
 import { Zap, TrendingUp, BarChart3, Globe } from 'lucide-react';
 
 export const runtime = 'edge';
@@ -165,6 +166,56 @@ export default async function Home({
           {(currentPage === 1 ? gridArticles : latestData).map((item) => (
             <NewsCard key={item.article.id} article={{ ...item.article, category: item.category }} />
           ))}
+        </div>
+      </section>
+
+      {/* 🏙️ Partnership & Advertisement Section */}
+      <section className="mb-32">
+        <div className="relative overflow-hidden rounded-[3rem] bg-[#0A0A0B] p-12 md:p-20 text-white border border-white/5 shadow-2xl">
+          {/* 장식용 글로우 효과 */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/20 rounded-full blur-[100px]" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary/10 rounded-full blur-[100px]" />
+          
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="px-3 py-1 bg-primary text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-md rotate-[-2deg]">
+                  PARTNERSHIP
+                </div>
+                <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white/40 italic">ADVERTISE WITH INTEL</h2>
+              </div>
+              <h3 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] mb-8 italic">
+                Connect with the <br />Future of <span className="text-primary">3D Tech.</span>
+              </h3>
+              <p className="text-white/60 text-base leading-relaxed max-w-lg mb-10">
+                매달 수천 명의 글로벌 기술 리더들이 3D프린팅타임즈를 방문합니다. 
+                귀사의 혁신을 인공지능 기반의 타겟 오디언스에게 직접 전달하세요.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/" className="bg-primary text-black px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:shadow-[0_0_30px_rgba(var(--primary),0.4)] transition-all active:scale-95">
+                  광고 등록 문의
+                </Link>
+                <Link href="/" className="bg-white/5 hover:bg-white/10 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] border border-white/10 transition-all">
+                  미디어 키 다운로드
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              {[
+                { label: 'Monthly Readers', value: '45.2K+', desc: 'Tech Decision Makers' },
+                { label: 'Global Reach', value: '180+', desc: 'Across 24 Countries' },
+                { label: 'Conversion', value: '12.4%', desc: 'Ad Click-through Rate' },
+                { label: 'Engagement', value: '04:20', desc: 'Average Reading Time' }
+              ].map((stat, i) => (
+                <div key={i} className="p-8 bg-white/5 rounded-[2rem] border border-white/5 backdrop-blur-sm group hover:bg-white/10 transition-all">
+                  <div className="text-[10px] font-black tracking-[0.2em] text-primary mb-3 uppercase">{stat.label}</div>
+                  <div className="text-3xl font-black italic tracking-tighter mb-2 group-hover:scale-110 transition-transform origin-left">{stat.value}</div>
+                  <div className="text-[10px] font-medium text-white/40 uppercase tracking-widest">{stat.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
