@@ -169,56 +169,6 @@ export default async function Home({
         </div>
       </section>
 
-      {/* 🏙️ Partnership & Advertisement Section */}
-      <section className="mb-32">
-        <div className="relative overflow-hidden rounded-[3rem] bg-[#0A0A0B] p-12 md:p-20 text-white border border-white/5 shadow-2xl">
-          {/* 장식용 글로우 효과 */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/20 rounded-full blur-[100px]" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary/10 rounded-full blur-[100px]" />
-          
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="px-3 py-1 bg-primary text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-md rotate-[-2deg]">
-                  PARTNERSHIP
-                </div>
-                <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white/40 italic">ADVERTISE WITH INTEL</h2>
-              </div>
-              <h3 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] mb-8 italic">
-                Connect with the <br />Future of <span className="text-primary">3D Tech.</span>
-              </h3>
-              <p className="text-white/60 text-base leading-relaxed max-w-lg mb-10">
-                매달 수천 명의 글로벌 기술 리더들이 3D프린팅타임즈를 방문합니다. 
-                귀사의 혁신을 인공지능 기반의 타겟 오디언스에게 직접 전달하세요.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/" className="bg-primary text-black px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:shadow-[0_0_30px_rgba(var(--primary),0.4)] transition-all active:scale-95">
-                  광고 등록 문의
-                </Link>
-                <Link href="/" className="bg-white/5 hover:bg-white/10 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] border border-white/10 transition-all">
-                  미디어 키 다운로드
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              {[
-                { label: 'Monthly Readers', value: '45.2K+', desc: 'Tech Decision Makers' },
-                { label: 'Global Reach', value: '180+', desc: 'Across 24 Countries' },
-                { label: 'Conversion', value: '12.4%', desc: 'Ad Click-through Rate' },
-                { label: 'Engagement', value: '04:20', desc: 'Average Reading Time' }
-              ].map((stat, i) => (
-                <div key={i} className="p-8 bg-white/5 rounded-[2rem] border border-white/5 backdrop-blur-sm group hover:bg-white/10 transition-all">
-                  <div className="text-[10px] font-black tracking-[0.2em] text-primary mb-3 uppercase">{stat.label}</div>
-                  <div className="text-3xl font-black italic tracking-tighter mb-2 group-hover:scale-110 transition-transform origin-left">{stat.value}</div>
-                  <div className="text-[10px] font-medium text-white/40 uppercase tracking-widest">{stat.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Pagination UI */}
       {totalPages > 1 && (
         <div className="mt-12 py-20 border-t border-muted-foreground/10 flex flex-col items-center gap-8">
@@ -231,6 +181,48 @@ export default async function Home({
           />
         </div>
       )}
+
+      {/* 🏙️ Partnership & Advertisement Section (Slim Version) */}
+      <section className="mb-12 mt-12">
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#0A0A0B] p-8 md:p-12 text-white border border-white/5 shadow-2xl">
+          <div className="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-[80px]" />
+          
+          <div className="relative z-10 flex flex-col lg:flex-row gap-10 items-center justify-between">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="px-2 py-0.5 bg-primary text-black text-[9px] font-black uppercase tracking-[0.2em] rounded">
+                  PARTNERSHIP
+                </div>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 italic">ADVERTISE WITH US</h2>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black tracking-tighter leading-tight mb-4 italic">
+                Connect with the Future of <span className="text-primary">3D Tech.</span>
+              </h3>
+              <p className="text-white/50 text-[11px] leading-relaxed mb-6">
+                글로벌 기술 리더들에게 귀사의 혁신을 직접 전달하세요. 
+                강력한 AI 오디언스 타겟팅으로 광고 효율을 극대화합니다.
+              </p>
+              <Link href="mailto:ceo@wow3d.kr" className="inline-block bg-primary text-black px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all active:scale-95">
+                광고 등록 및 제휴 문의
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full lg:w-auto">
+              {[
+                { label: 'Monthly Traffic', value: '45K+' },
+                { label: 'Global Reach', value: '180+' },
+                { label: 'Conversion', value: '12.4%' },
+                { label: 'Avg Reading', value: '04:20' }
+              ].map((stat, i) => (
+                <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center min-w-[120px]">
+                  <div className="text-[8px] font-black tracking-[0.1em] text-primary/60 mb-1 uppercase">{stat.label}</div>
+                  <div className="text-lg font-black italic tracking-tighter">{stat.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {latestData.length === 0 && (
         <div className="py-40 text-center border-4 border-dashed rounded-[4rem] bg-muted/5 flex flex-col items-center">
