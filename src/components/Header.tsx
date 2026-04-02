@@ -1,10 +1,33 @@
 import Link from 'next/link';
 import { Search, Menu, Radio, PlusCircle, Zap, Bell, Cpu, Monitor } from 'lucide-react';
 import { getSessionUser } from '@/lib/auth_edge';
+import { getDb } from '@/lib/db';
+import { articles } from '@/lib/db/schema';
+import { desc, eq } from 'drizzle-orm';
+
+async function getLatestTickerArticles() {
+  try {
+    const db = getDb();
+    const results = await db
+      .select({
+        title: articles.title,
+        slug: articles.slug,
+      })
+      .from(articles)
+      .where(eq(articles.status, 'published'))
+      .orderBy(desc(articles.publishedAt))
+      .limit(5);
+    return results;
+  } catch (error) {
+    console.error('Ticker Fetch Error:', error);
+    return [];
+  }
+}
 
 export default async function Header() {
   const user = await getSessionUser();
   const isAdmin = user?.role === 'admin' || user?.role === 'editor';
+  const tickerArticles = await getLatestTickerArticles();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -16,19 +39,20 @@ export default async function Header() {
               <Zap className="w-3 h-3 fill-primary" />
               <span className="font-black italic">BREAKING TECH:</span>
             </div>
+            
             <div className="flex gap-8 animate-in slide-in-from-right duration-1000 whitespace-nowrap overflow-hidden">
-              <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                <Cpu className="w-2.5 h-2.5 opacity-50" />
-                적층 제조 AI 슬라이싱 혁신 실현
-              </Link>
-              <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                <Monitor className="w-2.5 h-2.5 opacity-50" />
-                엔비디아 젠슨 황, 산업용 로봇의 미래 발표
-              </Link>
-              <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                <Cpu className="w-2.5 h-2.5 opacity-50" />
-                NASA 화성 거주지 3D 프린팅 프로젝트 완료 
-              </Link>
+              {tickerArticles.length > 0 ? (
+                tickerArticles.map((art, i) => (
+                  <Link key={i} href={`/articles/${art.slug}`} className="hover:text-primary transition-colors flex items-center gap-1.5">
+                    <Cpu className="w-2.5 h-2.5 opacity-50" />
+                    {art.title}
+                  </Link>
+                ))
+              ) : (
+                <>
+                  <span className="opacity-50">인텔리전스 엔진 대기 중...</span>
+                </>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4 shrink-0 border-l pl-6 ml-6">
