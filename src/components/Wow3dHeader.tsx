@@ -133,7 +133,7 @@ export default async function Wow3dHeader() {
               className="shrink-0 px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
               style={
                 i === 0
-                  ? { background: '#1A1A1E', color: 'white', shadow: '0 4px 12px rgba(0,0,0,0.1)' }
+                  ? { background: '#1A1A1E', color: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
                   : { background: '#F8F9FA', color: '#ADB5BD', border: '1px solid #E9ECEF' }
               }
             >

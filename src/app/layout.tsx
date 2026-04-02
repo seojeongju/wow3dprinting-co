@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_KR, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Wow3dHeader from "@/components/Wow3dHeader";
 import Footer from "@/components/Footer";
 import { headers } from "next/headers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoLines = Noto_Sans_KR({
+  variable: "--font-noto-sans",
   subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
 });
 
 const geistMono = Geist_Mono({
@@ -34,11 +35,11 @@ export default async function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${notoLines.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body
-        className="min-h-full flex flex-col"
-        style={isWow3d ? { background: '#0F0500' } : undefined}
+        className="min-h-full flex flex-col font-sans"
+        style={isWow3d ? { background: '#FFFFFF' } : undefined}
       >
         {/* 사이트별 헤더 분기 */}
         {isWow3d ? <Wow3dHeader /> : <Header />}

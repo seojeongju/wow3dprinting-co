@@ -60,7 +60,7 @@ export default function NewsCard({ article, priority, compact, horizontal }: New
         <div className="flex flex-col justify-center gap-1.5 ml-8">
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary">{article.category?.name || 'TECH'}</span>
           <Link href={`/articles/${article.slug}`}>
-            <h4 className="text-sm font-black leading-tight tracking-tight group-hover:text-primary transition-colors line-clamp-2 italic">
+            <h4 className="text-base font-black leading-tight tracking-tight group-hover:text-primary transition-colors line-clamp-2 italic">
               {article.title}
             </h4>
           </Link>
@@ -106,13 +106,13 @@ export default function NewsCard({ article, priority, compact, horizontal }: New
         </div>
 
         <Link href={`/articles/${article.slug}`}>
-          <h3 className={`${priority ? 'text-4xl md:text-5xl' : 'text-xl'} font-black tracking-tighter leading-[1.1] italic group-hover:text-primary transition-all duration-300`}>
+          <h3 className={`${priority ? 'text-4xl md:text-5xl lg:text-6xl' : 'text-2xl'} font-black tracking-tighter leading-[1.1] italic group-hover:text-primary transition-all duration-300`}>
             {article.title}
           </h3>
         </Link>
 
         {!compact && (
-          <p className={`text-muted-foreground leading-relaxed opacity-70 mb-2 ${priority ? 'text-lg lg:max-w-2xl' : 'text-sm line-clamp-3'}`}>
+          <p className={`text-foreground/80 leading-relaxed font-medium mb-2 ${priority ? 'text-xl lg:max-w-3xl' : 'text-base line-clamp-3'}`}>
             {excerpt}...
           </p>
         )}

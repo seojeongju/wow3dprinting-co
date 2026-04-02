@@ -187,8 +187,8 @@ export default async function Home({
       <section className="mb-32">
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">
-            <h2 className="text-3xl font-black italic tracking-tighter uppercase">Intelligence Radar</h2>
-            <div className="h-px w-24 bg-muted hidden md:block" />
+            <h2 className="text-4xl lg:text-5xl font-black italic tracking-tighter uppercase text-foreground">Intelligence Radar</h2>
+            <div className="h-px w-32 bg-muted hidden md:block" />
           </div>
         </div>
 
@@ -225,10 +225,10 @@ export default async function Home({
                 </div>
                 <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 italic">ADVERTISE WITH US</h2>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black tracking-tighter leading-tight mb-4 italic">
+              <h3 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter leading-tight mb-6 italic">
                 Connect with the Future of <span className="text-primary">3D Tech.</span>
               </h3>
-              <p className="text-white/50 text-[11px] leading-relaxed mb-6">
+              <p className="text-white/70 text-sm md:text-base leading-relaxed mb-8 font-medium">
                 글로벌 기술 리더들에게 귀사의 혁신을 직접 전달하세요.
                 강력한 AI 오디언스 타겟팅으로 광고 효율을 극대화합니다.
               </p>
