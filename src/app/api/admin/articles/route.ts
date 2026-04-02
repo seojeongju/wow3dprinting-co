@@ -34,6 +34,42 @@ export async function GET(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const password = searchParams.get('password');
+    const articleId = searchParams.get('id');
+
+    if (!articleId) {
+      return NextResponse.json({ success: false, message: '기사 ID가 필요합니다.' }, { status: 400 });
+    }
+
+    const context = getRequestContext() as any;
+    const env = context.env;
+
+    // 비밀번호 검증
+    if (env.ADMIN_PASSWORD && password !== env.ADMIN_PASSWORD) {
+      return NextResponse.json({ success: false, message: '인증되지 않은 접근입니다.' }, { status: 401 });
+    }
+
+    const db = getDb();
+    const id = parseInt(articleId, 10);
+
+    // 썸네일 키 조회 후 R2에서도 삭제
+    const article = await db.select().from(articles).where(eq(articles.id, id)).get();
+    if (article?.thumbnailKey && !article.thumbnailKey.startsWith('http')) {
+      try { await env.MEDIA.delete(article.thumbnailKey); } catch {}
+    }
+
+    // DB에서 삭제
+    await db.delete(articles).where(eq(articles.id, id)).run();
+
+    return NextResponse.json({ success: true, message: '기사가 삭제되었습니다.' });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: '삭제 중 오류', error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();

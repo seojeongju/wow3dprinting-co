@@ -15,7 +15,8 @@ import {
   Globe, 
   Laptop,
   ArrowRight,
-  Filter
+  Filter,
+  Trash2
 } from 'lucide-react';
 
 interface Category {
@@ -56,6 +57,32 @@ export default function AdminPage() {
       console.error('Fetch articles error:', err);
     }
   }, [formData.password]);
+
+  // 기사 삭제 처리
+  const handleDelete = async (id: number) => {
+    if (!confirm('정말로 이 기사를 영구 삭제하시겠습니까? 관련 이미지 자산도 함께 삭제됩니다.')) return;
+    
+    try {
+      const params = new URLSearchParams();
+      params.append('id', id.toString());
+      if (formData.password) params.append('password', formData.password);
+      
+      const res = await fetch(`/api/admin/articles?${params.toString()}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await res.json() as any;
+      if (res.ok && data.success) {
+        alert('기사가 성공적으로 삭제되었습니다.');
+        fetchArticles(); // 목록 갱신
+      } else {
+        alert(`삭제 실패: ${data.message || '알 수 없는 오류'}`);
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('서버와 통신 중 오류가 발생했습니다.');
+    }
+  };
 
   // 페이지 로드 시 즉시 실행 + 비밀번호 변경 시 재실행
   useEffect(() => {
@@ -374,6 +401,13 @@ export default function AdminPage() {
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
+                    <button 
+                      onClick={() => handleDelete(item.id)}
+                      className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100"
+                      title="기사 삭제"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
