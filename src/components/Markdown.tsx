@@ -15,8 +15,8 @@ export default function Markdown({ content }: MarkdownProps) {
             <img 
               {...props} 
               loading="lazy" 
-              style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '2.5rem auto' }} 
-              className="rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border bg-muted/20"
+              style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '3.5rem auto' }} 
+              className="rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border border-gray-100 bg-gray-50/30 ring-1 ring-black/5"
             />
           )
         }}

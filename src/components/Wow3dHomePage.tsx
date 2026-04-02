@@ -82,10 +82,10 @@ function SpotlightHero({ item }: { item: ArticleWithCategory }) {
   const { article, category } = item;
   return (
     <Link href={`/articles/${article.slug}`} className="relative group block rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(255,93,0,0.15)]">
-      <div className="h-[560px] w-full">
+      <div className="h-[clamp(400px,65vh,720px)] w-full">
         <ArticleImage src={article.thumbnailKey} alt={article.title} className="w-full h-full" />
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.95) 90%, #FFFFFF 100%)'
+          background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0.9) 85%, #FFFFFF 100%)'
         }} />
       </div>
 
