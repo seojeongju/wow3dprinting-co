@@ -37,12 +37,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: '필수 필드가 누락되었습니다.' }, { status: 400 });
     }
 
-    // 슬러그 중복 검사
+    // 슬러그 고유성 확보 (Smart Slug Generation)
     const db = getDb();
-    const existingArticle = await db.select().from(articles).where(eq(articles.slug, slug)).get();
+    let finalSlug = slug;
+    let suffix = 1;
     
-    if (existingArticle) {
-      return NextResponse.json({ success: false, message: '이미 존재하는 슬러그입니다. 다른 슬러그를 사용해주세요.' }, { status: 409 });
+    while (true) {
+      const existingArticle = await db.select().from(articles).where(eq(articles.slug, finalSlug)).get();
+      if (!existingArticle) break;
+      finalSlug = `${slug}-${suffix}`;
+      suffix++;
     }
 
     let thumbnailKey: string | null = null;
@@ -54,8 +58,8 @@ export async function POST(req: Request) {
       const fileName = (thumbnail as File).name || 'thumbnail.png';
       const extension = fileName.split('.').pop() || 'png';
       
-      // 고유 키 생성
-      thumbnailKey = `articles/${Date.now()}-${slug}.${extension}`;
+      // 고유 키 생성 (최종 확정된 finalSlug 사용)
+      thumbnailKey = `articles/${Date.now()}-${finalSlug}.${extension}`;
       
       // 버퍼를 스트림으로 직접 전달하거나 ArrayBuffer를 사용
       await env.MEDIA.put(thumbnailKey, buffer, {
@@ -68,7 +72,7 @@ export async function POST(req: Request) {
     // D1에 기사 정보 저장
     const newArticle = {
       title,
-      slug,
+      slug: finalSlug, // 최종 확정된 고유 슬러그 저장
       content,
       categoryId,
       authorId,
