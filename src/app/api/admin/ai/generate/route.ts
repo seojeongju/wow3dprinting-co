@@ -79,19 +79,41 @@ ${searchContext}
 
     if (!response.ok) {
       const errorData = await response.json() as any;
-      throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+      throw new Error(`Gemini API 호출 실패 (${response.status}): ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json() as any;
-    const aiResponseText = data.candidates[0].content.parts[0].text;
-    const aiResult = JSON.parse(aiResponseText);
+    
+    // Gemini 응답 구조에서 텍스트 추출 (안전한 접근)
+    const candidates = data.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error('Gemini가 응답 후보를 생성하지 못했습니다.');
+    }
+    
+    let aiResponseText = candidates[0].content?.parts?.[0]?.text;
+    if (!aiResponseText) {
+      throw new Error('Gemini 응답에서 텍스트 내용을 찾을 수 없습니다.');
+    }
 
-    return NextResponse.json({ success: true, ...aiResult });
+    // 마크다운 코드 블록(```json ... ```)이 포함된 경우 순수 JSON만 추출
+    try {
+      const jsonMatch = aiResponseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        aiResponseText = jsonMatch[0];
+      }
+      const aiResult = JSON.parse(aiResponseText);
+      return NextResponse.json({ success: true, ...aiResult });
+    } catch (parseError: any) {
+      console.error('AI JSON Parse Error:', parseError, 'Raw Text:', aiResponseText);
+      throw new Error(`AI 응답 해석 실패: JSON 형식이 아닙니다. (Raw: ${aiResponseText.substring(0, 50)}...)`);
+    }
+
   } catch (error: any) {
     console.error('AI Generate Error:', error);
     return NextResponse.json({ 
       success: false, 
-      message: error.message || '기사 생성 중 오류가 발생했습니다.' 
+      message: error.message || '기사 생성 중 오류가 발생했습니다.',
+      debug: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
 }
