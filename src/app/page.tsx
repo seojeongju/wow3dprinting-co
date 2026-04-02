@@ -12,6 +12,25 @@ export const runtime = 'edge';
 
 const ARTICLES_PER_PAGE = 12; // 1 Hero + 3 Side + 8 Grid
 
+export async function generateMetadata() {
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const domain = host.split(':')[0];
+  const isWow3d = domain === 'wow3dprinting.com' || domain.endsWith('.wow3dprinting.com');
+
+  if (isWow3d) {
+    return {
+      title: '와우3D프린팅타임즈 | 3D 프린팅 기술 인텔리전스 미디어',
+      description: '국내 유일 프리미엄 3D 프린팅 전문 미디어. 최첨단 3D 프린팅 기술, 산업 동향, 장비 리뷰 및 제조 인텔리전스를 제공합니다.',
+    };
+  }
+
+  return {
+    title: '3D프린팅타임즈 | AI · 3D 프린팅 · 로보틱스 인텔리전스',
+    description: '첨단 제조 기술, 머신러닝 혁신, AI·3D 프린팅·로보틱스 최신 트렌드를 가장 먼저 전달하는 국내 최고의 기술 미디어입니다.',
+  };
+}
+
 /**
  * 사이트별 기사 조회 필터
  * - 'times': target_sites가 'times' 또는 'both'인 기사

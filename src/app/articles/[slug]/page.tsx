@@ -2,6 +2,7 @@ import { getDb } from '@/lib/db';
 import { articles, categories } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import { isAdmin as checkIsAdmin } from '@/lib/auth_edge';
 import ArticleEditor from '@/components/ArticleEditor';
 
@@ -28,11 +29,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const data = await getArticle(slug);
   if (!data) return { title: 'Article Not Found' };
 
+  // 호스트에 따른 사이트명 설정
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const domain = host.split(':')[0];
+  const isWow3d = domain === 'wow3dprinting.com' || domain.endsWith('.wow3dprinting.com');
+  
+  const siteTitle = isWow3d ? '와우3D프린팅타임즈' : '3D프린팅타임즈';
+
+  // 마크다운 태그를 제거하고 순수 텍스트만 추출 (간단한 처리)
+  const cleanDescription = data.article.content
+    .replace(/[#*`>]/g, '')
+    .slice(0, 160)
+    .trim();
+
   return {
-    title: `${data.article.title} | 3D Printing Times`,
-    description: data.article.content.slice(0, 160),
+    title: `${data.article.title} | ${siteTitle}`,
+    description: cleanDescription,
     openGraph: {
       title: data.article.title,
+      description: cleanDescription,
       images: data.article.thumbnailKey ? [(data.article.thumbnailKey.startsWith('http') ? data.article.thumbnailKey : `/api/assets/${data.article.thumbnailKey}`)] : [],
     },
   };
