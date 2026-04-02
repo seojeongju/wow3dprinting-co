@@ -6,6 +6,34 @@ import { eq } from 'drizzle-orm';
 
 export const runtime = 'edge';
 
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const password = searchParams.get('password');
+
+    const context = getRequestContext() as any;
+    const env = context.env;
+    
+    // 비밀번호 검증
+    if (env.ADMIN_PASSWORD && password !== env.ADMIN_PASSWORD) {
+      return NextResponse.json({ success: false, message: '인증되지 않은 접근입니다.' }, { status: 401 });
+    }
+
+    const db = getDb();
+    const allArticles = await db.select().from(articles).orderBy(articles.publishedAt).all();
+    
+    // 최신순 정렬 (ID 또는 정렬 필드 기준)
+    const sortedArticles = allArticles.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+    return NextResponse.json({
+      success: true,
+      articles: sortedArticles,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: '목록 조회 오류', error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
