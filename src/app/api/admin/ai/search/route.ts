@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
 
@@ -8,12 +9,13 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const { keyword } = await request.json() as { keyword: string };
-    const apiKey = process.env.SERPER_API_KEY;
+    const context = getRequestContext();
+    const apiKey = (context?.env as any)?.SERPER_API_KEY || process.env.SERPER_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json({ 
         success: false, 
-        message: 'SERPER_API_KEY가 설정되지 않았습니다. .dev.vars 또는 환경변수를 확인하세요.' 
+        message: 'SERPER_API_KEY가 설정되지 않았습니다. Cloudflare 설정 또는 .dev.vars를 확인하세요.' 
       }, { status: 500 });
     }
 

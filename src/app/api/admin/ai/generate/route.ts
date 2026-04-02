@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
 
@@ -8,16 +9,17 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const { prompt, searchResults } = await request.json() as { prompt: string, searchResults?: any[] };
-    const apiKey = process.env.GEMINI_API_KEY;
+    const context = getRequestContext();
+    const apiKey = (context?.env as any)?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json({ 
         success: false, 
-        message: 'GEMINI_API_KEY가 설정되지 않았습니다. .dev.vars 또는 환경변수를 확인하세요.' 
+        message: 'GEMINI_API_KEY가 설정되지 않았습니다. Cloudflare 설정 또는 .dev.vars를 확인하세요.' 
       }, { status: 500 });
     }
 
-    const context = searchResults?.map(res => `제목: ${res.title}\n출처: ${res.source}\n내용: ${res.snippet}`).join('\n\n') || '';
+    const searchContext = searchResults?.map(res => `제목: ${res.title}\n출처: ${res.source}\n내용: ${res.snippet}`).join('\n\n') || '';
 
     const systemPrompt = `
 당신은 전문적인 IT/기술 뉴스 에디터입니다.
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
     const userMessage = `
 키워드: ${prompt}
 검색 자료: 
-${context}
+${searchContext}
 
 위 자료를 분석하여 3D 프린팅 및 로봇공학 전문 뉴스 기사를 작성해줘.
 데이터가 부족하면 일반적인 기술 지식을 바탕으로 풍성하게 작성해줘.
