@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSessionUser } from '@/lib/auth_edge';
+import LogoutButton from './LogoutButton';
 
 export default async function Footer() {
   const user = await getSessionUser();
@@ -75,13 +76,7 @@ export default async function Footer() {
             <div className="flex items-center gap-6">
               <span className="hidden md:block opacity-50">본 사이트는 이메일주소 무단수집을 거부합니다. [법률 8486호]</span>
               {isAdmin ? (
-                <button 
-                  className="font-black text-primary hover:underline underline-offset-4 tracking-widest uppercase text-[10px]"
-                  // Note: Form이나 Client component를 통해 로그아웃 처리 가능하지만 여기서는 단순 링크 처리나 API 호출 필요
-                  onClick={undefined} 
-                >
-                  [ 관리자 로그아웃 ]
-                </button>
+                <LogoutButton />
               ) : (
                 <Link href="/admin/login" className="font-black text-primary hover:underline underline-offset-4 tracking-widest uppercase text-[10px]">
                   [ 관리자 로그인 ]
