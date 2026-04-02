@@ -38,6 +38,11 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // 필터링 상태
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -63,10 +68,10 @@ export default function AdminPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 탭 변경 시 페이지 초기화
+  // 탭 또는 검색 조건 변경 시 페이지 초기화
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab]);
+  }, [activeTab, searchTerm, startDate, endDate]);
 
   // 수정 취소
   const handleCancelEdit = () => {
@@ -426,9 +431,70 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* 필터 및 검색 바 */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8 p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
+          <div className="flex-1 relative">
+            <input 
+              type="text"
+              placeholder="제목, 내용 또는 슬러그 검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-muted/20 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary outline-none"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
+              <Filter className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-4 py-3 bg-muted/20 border-none rounded-xl text-[10px] font-black focus:ring-2 focus:ring-primary outline-none"
+            />
+            <span className="flex items-center text-gray-300">~</span>
+            <input 
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-4 py-3 bg-muted/20 border-none rounded-xl text-[10px] font-black focus:ring-2 focus:ring-primary outline-none"
+            />
+            {(searchTerm || startDate || endDate) && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="px-4 py-3 bg-red-50 text-red-500 rounded-xl text-[10px] font-black hover:bg-red-500 hover:text-white transition-all"
+              >
+                초기화
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="grid gap-4">
           {(() => {
-            const filtered = articles.filter(a => activeTab === 'all' || a.status === 'draft');
+            const filtered = articles.filter(a => {
+              // 1. 탭 필터 (전체 또는 임시저장)
+              const tabOk = activeTab === 'all' || a.status === 'draft';
+              
+              // 2. 키워드 검색 (제목, 본문, 슬러그)
+              const term = searchTerm.toLowerCase().trim();
+              const searchOk = !term || 
+                a.title.toLowerCase().includes(term) || 
+                (a.content && a.content.toLowerCase().includes(term)) || 
+                a.slug.toLowerCase().includes(term);
+
+              // 3. 발행 날짜 필터
+              // 기사 날짜를 YYYY-MM-DD 형식으로 변환
+              const artDate = new Date(a.publishedAt || a.id).toISOString().split('T')[0];
+              const startOk = !startDate || artDate >= startDate;
+              const endOk = !endDate || artDate <= endDate;
+
+              return tabOk && searchOk && startOk && endOk;
+            });
             const totalPages = Math.ceil(filtered.length / itemsPerPage);
             const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
