@@ -296,7 +296,7 @@ export default function Wow3dHomePage({
                   className="w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all"
                   style={
                     page === currentPage
-                      ? { background: '#1A1A1E', color: 'white', shadow: '0 10px 20px rgba(0,0,0,0.1)' }
+                      ? { background: '#1A1A1E', color: 'white', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }
                       : { background: '#F8F9FA', color: '#ADB5BD', border: '1px solid #E9ECEF' }
                   }>
                   {page.toString().padStart(2, '0')}
