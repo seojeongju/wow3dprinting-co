@@ -7,7 +7,7 @@ import { Zap, TrendingUp, BarChart3, Globe } from 'lucide-react';
 
 export const runtime = 'edge';
 
-const ARTICLES_PER_PAGE = 11; // 1 Hero + 3 Side + 7 Grid
+const ARTICLES_PER_PAGE = 12; // 1 Hero + 3 Side + 8 Grid
 
 async function getLatestArticles(page: number = 1) {
   try {
