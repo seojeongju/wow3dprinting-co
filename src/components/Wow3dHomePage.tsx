@@ -100,52 +100,52 @@ function ArticleImage({ src, fallbackContent, alt, className }: { src: string | 
   );
 }
 
-// Spotlight Hero Component (Ultrawide - White Theme)
-function SpotlightHero({ item }: { item: ArticleWithCategory }) {
-  const { article, category } = item;
+// Digital Branding Hero Component (Ultrawide - White Theme)
+function DigitalBrandingHero() {
   return (
-    <Link href={`/articles/${article.slug}`} className="relative group block rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(255,93,0,0.15)]">
-      <div className="h-[clamp(400px,65vh,720px)] w-full">
-        <ArticleImage src={article.thumbnailKey} fallbackContent={article.content} alt={article.title} className="w-full h-full" />
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0.9) 85%, #FFFFFF 100%)'
-        }} />
-      </div>
+    <section className="relative h-[clamp(450px,70vh,800px)] w-full rounded-[3rem] overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.12)] mb-20 animate-in fade-in slide-in-from-top-10 duration-1000">
+      {/* Background Digital Asset */}
+      <img 
+        src="/images/wow3d-branding-hero.png" 
+        alt="WOW3D Digital Tech Intelligence" 
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      
+      {/* Premium Overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(to right, rgba(255,255,255,1) 10%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,0) 100%)'
+      }} />
 
-      <div className="absolute bottom-0 left-0 w-full p-8 md:p-14">
-        <div className="flex items-center gap-3 mb-6">
-          {category && (
-            <span className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-[#FF5D00] text-white shadow-lg">
-              {category.name}
-            </span>
-          )}
-          <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 tracking-widest uppercase">
-            <Radio className="w-3.5 h-3.5 text-[#FF5D00] animate-pulse" />
-            Top Intelligence
-          </span>
+      <div className="relative h-full container mx-auto px-10 flex flex-col justify-center max-w-4x">
+        <div className="flex items-center gap-4 mb-8">
+           <div className="w-12 h-12 bg-[#FF5D00] rounded-2xl flex items-center justify-center rotate-3 shadow-lg shadow-[#FF5D00]/20">
+              <Zap className="w-6 h-6 text-white fill-white" />
+           </div>
+           <span className="text-xs font-black uppercase tracking-[0.5em] text-[#FF5D00]">The Intelligence Radar</span>
         </div>
         
-        <h1 className="text-3xl md:text-5xl font-black text-[#1A1A1E] tracking-tighter leading-tight mb-6 max-w-4xl group-hover:translate-x-2 transition-transform duration-500">
-          {article.title}
+        <h1 className="text-5xl md:text-8xl font-black text-[#1A1A1E] tracking-tighter leading-none mb-8 italic">
+          WOW3D<br />
+          PRINTING<br />
+          <span className="text-[#FF5D00]">TIMES</span>
         </h1>
         
-        <div className="flex flex-col md:flex-row md:items-center gap-8">
-          <p className="text-sm md:text-base text-gray-500 leading-relaxed max-w-2xl line-clamp-2 font-medium">
-            {getExcerpt(article.content, 180)}
-          </p>
-          <div className="shrink-0 flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-gray-300 border-l border-gray-100 pl-8">
-            <div className="flex flex-col">
-              <span className="text-[#FF5D00] mb-1">Source</span>
-              <span>WOW3D_Intel</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[#FF5D00] mb-1">Stream</span>
-              <span>{timeAgo(article.publishedAt)}</span>
-            </div>
-          </div>
+        <p className="text-lg md:text-xl text-gray-500 font-medium max-w-xl leading-relaxed mb-12">
+          최첨단 3D 프린팅 기술과 차세대 제조 인텔리전스를 연결하는 <br />
+          국내 유일의 프리미엄 3D 기술 미디어 플랫폼입니다.
+        </p>
+
+        <div className="flex items-center gap-6">
+           <Link href="#feed" className="px-10 py-5 bg-[#1A1A1E] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-[#FF5D00] hover:shadow-2xl hover:shadow-[#FF5D00]/30 transition-all duration-500">
+              Explore Latest Intel
+           </Link>
+           <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#ADB5BD]">
+              <Radio className="w-4 h-4 text-[#FF5D00] animate-pulse" />
+              Real-time_Sync_Active
+           </div>
         </div>
       </div>
-    </Link>
+    </section>
   );
 }
 
@@ -222,9 +222,10 @@ export default function Wow3dHomePage({
   currentPage,
   dbError,
 }: Wow3dHomePageProps) {
-  const [hero, ...rest] = latestData;
-  const trending = rest.slice(0, 5);
-  const others = rest.slice(5);
+  // 최신 순서대로 기사 배치 조정
+  const trending = latestData.slice(0, 5); // 트렌딩은 상위 5개 유지
+  const feedTop = latestData.slice(0, 4);  // 피드 상단 4개
+  const feedRest = latestData.slice(4);    // 나머지 아카이브
 
   return (
     <div className="min-h-screen pb-24 bg-white" style={{ color: '#1A1A1E' }}>
@@ -248,44 +249,39 @@ export default function Wow3dHomePage({
             </div>
         </div>
 
-        {currentPage === 1 && latestData.length > 0 && (
-          <>
-            {/* Phase 1: Spotlight Hero */}
-            <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-               <SpotlightHero item={hero} />
-            </section>
-
-            {/* Phase 2: Feed & Sidebar */}
-            <section className="mb-32 grid grid-cols-1 lg:grid-cols-12 gap-20 items-start">
-               <div className="lg:col-span-8 flex flex-col gap-12">
-                  <div className="flex items-center gap-4">
-                     <span className="w-16 h-0.5 bg-[#FF5D00]" />
-                     <h2 className="text-2xl font-black uppercase italic tracking-tighter">Technology Intel Feed</h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                     {others.slice(0, 4).map((item) => (
-                       <MagazineCard key={item.article.id} item={item} />
-                     ))}
-                  </div>
-               </div>
-               
-               <aside className="lg:col-span-4 lg:sticky lg:top-32 h-fit bg-gray-50/50 border border-gray-100 p-10 rounded-[2.5rem]">
-                  <TrendingBar items={trending} />
-                  
-                  {/* Premium Action Card */}
-                  <div className="mt-14 p-8 rounded-3xl bg-[#FF5D00] shadow-[0_20px_40px_rgba(255,93,0,0.3)] relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-2xl" />
-                     <Zap className="relative w-8 h-8 text-white mb-4 fill-white" />
-                     <h3 className="relative text-xl font-black text-white italic tracking-tighter mb-4">WOW3D <br />Partnership Radar</h3>
-                     <p className="relative text-[10px] font-bold uppercase tracking-widest text-white/70 mb-8 leading-relaxed">3D 테크 기업을 위한 최상의 광고 솔루션</p>
-                     <Link href="mailto:wow3d16@naver.com" className="relative block w-full py-4 bg-white text-[#FF5D00] text-[10px] font-black uppercase tracking-[0.2em] text-center rounded-xl hover:bg-white/90 transition-colors shadow-lg">
-                        Connect with Us
-                     </Link>
-                  </div>
-               </aside>
-            </section>
-          </>
+        {currentPage === 1 && (
+          <DigitalBrandingHero />
         )}
+
+        {/* Phase 2: Feed & Sidebar */}
+        <section id="feed" className="mb-32 grid grid-cols-1 lg:grid-cols-12 gap-20 items-start">
+           <div className="lg:col-span-8 flex flex-col gap-12">
+              <div className="flex items-center gap-4">
+                 <span className="w-16 h-0.5 bg-[#FF5D00]" />
+                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">Technology Intel Feed</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                 {feedTop.map((item) => (
+                   <MagazineCard key={item.article.id} item={item} />
+                 ))}
+              </div>
+           </div>
+           
+           <aside className="lg:col-span-4 lg:sticky lg:top-32 h-fit bg-gray-50/50 border border-gray-100 p-10 rounded-[2.5rem]">
+              <TrendingBar items={trending} />
+              
+              {/* Premium Action Card */}
+              <div className="mt-14 p-8 rounded-3xl bg-[#FF5D00] shadow-[0_20px_40px_rgba(255,93,0,0.3)] relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-2xl" />
+                 <Zap className="relative w-8 h-8 text-white mb-4 fill-white" />
+                 <h3 className="relative text-xl font-black text-white italic tracking-tighter mb-4">WOW3D <br />Partnership Radar</h3>
+                 <p className="relative text-[10px] font-bold uppercase tracking-widest text-white/70 mb-8 leading-relaxed">3D 테크 기업을 위한 최상의 광고 솔루션</p>
+                 <Link href="mailto:wow3d16@naver.com" className="relative block w-full py-4 bg-white text-[#FF5D00] text-[10px] font-black uppercase tracking-[0.2em] text-center rounded-xl hover:bg-white/90 transition-colors shadow-lg">
+                    Connect with Us
+                 </Link>
+              </div>
+           </aside>
+        </section>
 
         {/* Phase 3: Archive Grid */}
         <section className="mb-32">
@@ -297,12 +293,18 @@ export default function Wow3dHomePage({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-            {(currentPage === 1 ? others.slice(4) : latestData).map((item) => (
+            {feedRest.map((item) => (
               <MagazineCard key={item.article.id} item={item} />
             ))}
           </div>
 
-          {(currentPage === 1 ? others.slice(4) : latestData).length === 0 && (
+          {feedRest.length === 0 && currentPage > 1 && (
+            <div className="py-40 text-center border-2 border-dashed border-gray-100 rounded-[4rem] bg-gray-50/50">
+               <Cpu className="w-16 h-16 text-gray-200 mx-auto mb-8 animate-pulse" />
+               <p className="text-xl font-black uppercase italic tracking-widest text-gray-300">No Data Synchronized Yet</p>
+            </div>
+          )}
+        </section>
             <div className="py-40 text-center border-2 border-dashed border-gray-100 rounded-[4rem] bg-gray-50/50">
                <Cpu className="w-16 h-16 text-gray-200 mx-auto mb-8 animate-pulse" />
                <p className="text-xl font-black uppercase italic tracking-widest text-gray-300">No Data Synchronized Yet</p>
