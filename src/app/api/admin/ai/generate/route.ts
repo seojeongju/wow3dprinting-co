@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { assertAdminAuthorized, getBindingsEnv } from '@/lib/admin-auth';
+import {
+  type ArticleDepthPreset,
+  type ArticleLengthPreset,
+  buildArticleDraftOptionInstructions,
+  clampCustomArticleChars,
+} from '@/lib/ai-draft-presets';
 import { generateArticleDraftWithFallback } from '@/lib/ai-providers';
 
 export const runtime = 'edge';
 
 /**
- * 기사 초안: 제목(title) + 본문(content)=리드 후 ##소제목/기사내용 블록, AI_PROVIDER 순 폴백
+ * 기사 초안: 제목+본문 구조, lengthPreset·depthPreset 반영, AI_PROVIDER 순 폴백
  * auto(기본): Groq → OpenAI → Gemini
  * 환경: GROQ_API_KEY, GROQ_MODEL(선택), GEMINI_API_KEY, OPENAI_API_KEY, AI_PROVIDER
  */
@@ -15,6 +21,12 @@ export async function POST(request: NextRequest) {
       prompt?: string;
       searchResults?: Array<{ title?: string; source?: string; snippet?: string; link?: string }>;
       password?: string;
+      /** 분량 프리셋 (기본 medium) */
+      lengthPreset?: string;
+      /** lengthPreset=custom 일 때 목표 글자 수 */
+      lengthChars?: number;
+      /** 서술 깊이 (기본 standard) */
+      depthPreset?: string;
     };
 
     const auth = assertAdminAuthorized(body.password);
@@ -26,6 +38,31 @@ export async function POST(request: NextRequest) {
     if (!prompt) {
       return NextResponse.json({ success: false, message: '키워드(주제)를 입력하세요.' }, { status: 400 });
     }
+
+    const allowedLength = new Set<ArticleLengthPreset>([
+      'xs',
+      'short',
+      'medium',
+      'long',
+      'deep',
+      'custom',
+    ]);
+    const allowedDepth = new Set<ArticleDepthPreset>(['compact', 'standard', 'deep']);
+
+    const rawLen = (body.lengthPreset || 'medium').toLowerCase();
+    const lengthPreset: ArticleLengthPreset = allowedLength.has(rawLen as ArticleLengthPreset)
+      ? (rawLen as ArticleLengthPreset)
+      : 'medium';
+
+    const rawDepth = (body.depthPreset || 'standard').toLowerCase();
+    const depthPreset: ArticleDepthPreset = allowedDepth.has(rawDepth as ArticleDepthPreset)
+      ? (rawDepth as ArticleDepthPreset)
+      : 'standard';
+
+    const lengthChars =
+      lengthPreset === 'custom' ? clampCustomArticleChars(Number(body.lengthChars)) : undefined;
+
+    const optionBlock = buildArticleDraftOptionInstructions(lengthPreset, lengthChars, depthPreset);
 
     const env = getBindingsEnv() as Record<string, unknown>;
 
@@ -53,7 +90,9 @@ export async function POST(request: NextRequest) {
 - 소제목은 모두 같은 레벨의 ## 만 사용. ### 은 필요할 때만 소수.
 - 소제목 아래를 불릿·번호 목록만으로 채우지 마세요. 반드시 서술 문단을 포함하세요.
 - 톤: 객관적 뉴스체. 에세이·강의록·PPT 목차형 금지.
-- 기술 용어 정확히(예: SLM은 선택적 레이저 융합 금속 적층). 사실과 전망 구분. 없는 수치·인용·고유명사 생성 금지.`;
+- 기술 용어 정확히(예: SLM은 선택적 레이저 융합 금속 적층). 사실과 전망 구분. 없는 수치·인용·고유명사 생성 금지.
+
+${optionBlock}`;
 
     const userText = `주제/키워드: ${prompt}
 
@@ -74,7 +113,9 @@ ${searchContext || '(참고 자료 없음 — 주제에 맞는 일반적인 구�
 
 ## 세 번째 소제목
 필요 시 네 번째 ## 블록까지 이어갑니다.
----`;
+---
+
+위 [이번 생성 옵션]의 분량·구조·서술 깊이를 반드시 우선 적용하세요.`;
 
     const { title, slug, content, usedProvider } = await generateArticleDraftWithFallback(
       env,

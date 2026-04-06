@@ -2,6 +2,12 @@
 
 import { useState } from 'react';
 import {
+  type ArticleDepthPreset,
+  type ArticleLengthPreset,
+  articleDepthPresetLabel,
+  articleLengthPresetLabel,
+} from '@/lib/ai-draft-presets';
+import {
   Sparkles,
   Search,
   Loader2,
@@ -37,6 +43,10 @@ export default function AiToolbox({ adminPassword = '', onApply, onAppendContent
   const [assistAction, setAssistAction] = useState<AssistAction>('rewrite');
   const [assistResult, setAssistResult] = useState('');
   const [assistLoading, setAssistLoading] = useState(false);
+
+  const [lengthPreset, setLengthPreset] = useState<ArticleLengthPreset>('medium');
+  const [lengthCustom, setLengthCustom] = useState(1200);
+  const [depthPreset, setDepthPreset] = useState<ArticleDepthPreset>('standard');
 
   const pwd = () => adminPassword || undefined;
 
@@ -92,6 +102,9 @@ export default function AiToolbox({ adminPassword = '', onApply, onAppendContent
           prompt: keyword.trim(),
           searchResults: filteredResults,
           password: pwd(),
+          lengthPreset,
+          ...(lengthPreset === 'custom' ? { lengthChars: lengthCustom } : {}),
+          depthPreset,
         }),
       });
       const data = (await res.json()) as {
@@ -219,9 +232,55 @@ export default function AiToolbox({ adminPassword = '', onApply, onAppendContent
       {panel === 'draft' && (
         <div className="space-y-4">
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            제목은 제목 필드에, 본문은 리드(## 없음) 다음에 <code className="text-foreground/80">## 소제목</code>마다 그 아래
-            기사 내용 단락이 오는 구조로 생성됩니다(소제목+본문 블록 2개 이상).
+            제목은 제목 필드에, 본문은 리드(## 없음) 다음 <code className="text-foreground/80">## 소제목</code>+기사 내용 블록
+            순입니다. 분량 옵션에 따라 블록 개수·길이가 달라집니다.
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl border bg-background/80">
+            <label className="flex flex-col gap-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              분량
+              <select
+                value={lengthPreset}
+                onChange={(e) => setLengthPreset(e.target.value as ArticleLengthPreset)}
+                className="text-xs font-semibold normal-case tracking-normal border rounded-xl px-3 py-2 bg-white text-foreground"
+              >
+                {(
+                  ['xs', 'short', 'medium', 'long', 'deep', 'custom'] satisfies ArticleLengthPreset[]
+                ).map((k) => (
+                  <option key={k} value={k}>
+                    {articleLengthPresetLabel(k)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              서술 깊이
+              <select
+                value={depthPreset}
+                onChange={(e) => setDepthPreset(e.target.value as ArticleDepthPreset)}
+                className="text-xs font-semibold normal-case tracking-normal border rounded-xl px-3 py-2 bg-white text-foreground"
+              >
+                {(['compact', 'standard', 'deep'] satisfies ArticleDepthPreset[]).map((k) => (
+                  <option key={k} value={k}>
+                    {articleDepthPresetLabel(k)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {lengthPreset === 'custom' && (
+              <label className="sm:col-span-2 flex flex-col gap-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                목표 글자 수 (본문 Markdown 전체)
+                <input
+                  type="number"
+                  min={200}
+                  max={8000}
+                  step={50}
+                  value={lengthCustom}
+                  onChange={(e) => setLengthCustom(Number(e.target.value) || 1200)}
+                  className="text-xs font-semibold normal-case tracking-normal border rounded-xl px-3 py-2 bg-white text-foreground max-w-[200px]"
+                />
+              </label>
+            )}
+          </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
