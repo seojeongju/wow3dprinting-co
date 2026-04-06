@@ -219,7 +219,8 @@ export default function AiToolbox({ adminPassword = '', onApply, onAppendContent
       {panel === 'draft' && (
         <div className="space-y-4">
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            생성되는 본문은 신문 기사 형식입니다. 첫 단락이 리드(5W1H 요약), 이후는 서술형 단락 위주이며 소제목·목록은 보조로만 씁니다.
+            제목은 제목 필드에, 본문은 리드(## 없음) 다음에 <code className="text-foreground/80">## 소제목</code>마다 그 아래
+            기사 내용 단락이 오는 구조로 생성됩니다(소제목+본문 블록 2개 이상).
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <input

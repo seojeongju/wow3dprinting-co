@@ -57,7 +57,15 @@ function shouldTryFallback(errMsg: string, httpStatus: number): boolean {
 }
 
 const ARTICLE_SCHEMA_DESC = `반드시 JSON 한 덩어리만 출력하세요. 키: title(한국어 제목), slug(영문 소문자·숫자·하이픈), content(Markdown 본문).
-content는 반드시 신문 기사 형식: (1) 첫 단락은 리드로 5W1H를 압축 요약 (2) 이후는 서술형 단락 위주, ## 소제목은 필요 시 1~3개만 (3) 불릿·나열은 보조로만 쓰고 본문 전체를 목록·에세이·강의록처럼 쓰지 말 것 (4) 사실과 전망·분석을 구분하고, 없는 인물·기관명·수치를 지어내지 말 것.`;
+
+[content 고정 구조 — 위반 금지]
+- 제목은 JSON의 title 필드에만 둔다. content 맨 앞에 # 또는 ## 로 제목을 다시 쓰지 않는다.
+- content는 반드시 (1) 리드 (2) 소제목+본문 블록 반복 순서다.
+  (1) 리드: ## 없이 평문 단락 1~2개만. 5W1H 핵심 요약, 뉴스체.
+  (2) 그 다음부터 각 블록: 한 줄 "## 소제목텍스트" 다음에 빈 줄, 그 아래에 그 소제목에 대한 기사 내용(서술형 단락 1개 이상). 이 "## 소제목 + 본문" 쌍을 최소 2개, 권장 3~4개.
+- 소제목은 반드시 Markdown H2(## ) 한 줄로만 쓴다. ### 은 필요할 때만 소수.
+- 불릿·번호 목록은 보조만. 소제목 아래를 목록만으로 채우지 말고 서술 문단을 반드시 포함한다.
+- 에세이·강의록·PPT 개요형 금지. 사실과 전망을 구분하고, 없는 인물·기관명·수치를 지어내지 말 것.`;
 
 async function postChatCompletions(
   url: string,
@@ -128,7 +136,7 @@ async function geminiGenerateArticle(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemInstruction }] },
+      systemInstruction: { parts: [{ text: `${systemInstruction}\n\n${ARTICLE_SCHEMA_DESC}` }] },
       contents: [{ role: 'user', parts: [{ text: userText }] }],
       generationConfig: {
         temperature: 0.65,
