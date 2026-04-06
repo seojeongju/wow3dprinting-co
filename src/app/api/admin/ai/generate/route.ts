@@ -1,122 +1,140 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { assertAdminAuthorized, findEnvKey, getBindingsEnv } from '@/lib/admin-auth';
 
 export const runtime = 'edge';
 
+const ARTICLE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', description: '기사 제목 (한국어)' },
+    slug: { type: 'string', description: '영문 소문자·숫자·하이픈 슬러그' },
+    content: { type: 'string', description: 'Markdown 본문' },
+  },
+  required: ['title', 'slug', 'content'],
+};
+
 /**
- * Gemini API를 사용하여 기사 초안 작성
+ * Gemini로 기사 초안(JSON) 생성
  */
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, searchResults } = await request.json() as { prompt: string, searchResults?: any[] };
-    const cfContext = getRequestContext();
-    const env = (cfContext?.env || process.env || {}) as any;
-    
-    // 환경 변수 이름을 앞뒤 공백 없이 찾아내는 정밀 매칭 함수
-    const findEnvKey = (target: string) => {
-      if (env[target]) return env[target];
-      const cleanKey = Object.keys(env).find(k => k.trim() === target);
-      return cleanKey ? env[cleanKey] : null;
+    const body = (await request.json()) as {
+      prompt?: string;
+      searchResults?: Array<{ title?: string; source?: string; snippet?: string; link?: string }>;
+      password?: string;
     };
 
-    const apiKey = findEnvKey('GEMINI_API_KEY');
-
-    if (!apiKey) {
-      const availableKeys = Object.keys(env).join(', ');
-      const envSource = cfContext?.env ? 'Cloudflare Runtime' : 'Node.js Process';
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: `GEMINI_API_KEY를 찾을 수 없습니다. (Source: ${envSource})\n현재 인식된 변수 목록: [${availableKeys || '없음'}]\n환경 변수 이름 앞뒤에 공백이 없는지 대시보드에서 꼭 확인해 주세요.` 
-      }, { status: 500 });
+    const auth = assertAdminAuthorized(body.password);
+    if (!auth.ok) {
+      return NextResponse.json({ success: false, message: auth.message }, { status: 401 });
     }
 
-    const searchContext = searchResults?.map(res => `제목: ${res.title}\n출처: ${res.source}\n내용: ${res.snippet}`).join('\n\n') || '';
+    const prompt = body.prompt?.trim();
+    if (!prompt) {
+      return NextResponse.json({ success: false, message: '키워드(주제)를 입력하세요.' }, { status: 400 });
+    }
 
-    const systemPrompt = `
-당신은 전문적인 IT/기술 뉴스 에디터입니다.
-사용자가 제공하는 키워드와 검색 결과를 바탕으로 최신 기술 뉴스를 작성하세요.
-반드시 아래 형식을 지켜주세요.
+    const env = getBindingsEnv() as Record<string, unknown>;
+    const apiKey = findEnvKey(env, 'GEMINI_API_KEY');
 
-언어: 한국어
-톤: 전문적이지만 읽기 쉬운 전문 기술 블로그/뉴스 스타일
-포맷: Markdown
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'GEMINI_API_KEY가 설정되지 않았습니다. Cloudflare 대시보드 또는 .dev.vars를 확인하세요.',
+        },
+        { status: 500 }
+      );
+    }
 
-응답은 반드시 JSON 형식이어야 합니다. 필드:
-{
-  "title": "기학하고 매력적인 제목",
-  "slug": "영어-소문자-하이픈-형식-슬러그",
-  "content": "마크다운 본문 (서론, 본론, 분석, 결론 포함)"
-}
-`;
+    const searchContext =
+      body.searchResults
+        ?.map(
+          (res) =>
+            `제목: ${res.title || ''}\n출처: ${res.source || ''}\nURL: ${res.link || ''}\n요약: ${res.snippet || ''}`
+        )
+        .join('\n\n') || '';
 
-    const userMessage = `
-키워드: ${prompt}
-검색 자료: 
-${searchContext}
+    const systemInstruction = `당신은 3D 프린팅·제조·로봇 분야 전문 뉴스 에디터입니다.
+사용자 키워드와 참고 자료를 바탕으로 한국어 기술 뉴스 초안을 작성합니다.
+- 톤: 전문적이고 읽기 쉬움
+- 본문은 Markdown (## 소제목, 목록, 강조 등 사용)
+- 사실과 추측을 구분하고, 참고 자료에 없는 수치는 만들지 마세요.
+- 응답은 지정된 JSON 스키마에만 맞출 것.`;
 
-위 자료를 분석하여 3D 프린팅 및 로봇공학 전문 뉴스 기사를 작성해줘.
-데이터가 부족하면 일반적인 기술 지식을 바탕으로 풍성하게 작성해줘.
-`;
+    const userText = `주제/키워드: ${prompt}
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+참고 자료:
+${searchContext || '(참고 자료 없음 — 주제에 맞는 일반적인 구조의 초안을 작성하세요.)'}
+
+위를 바탕으로 title, slug, content 필드를 채운 기사 초안을 작성하세요.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
 
     const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: systemPrompt + "\n\n" + userMessage }]
-          }
-        ],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        contents: [{ role: 'user', parts: [{ text: userText }] }],
         generationConfig: {
-          // 호환성 문제를 위해 responseMimeType은 제외하고 프롬프트 지시 및 자체 파싱 로직에 의존합니다.
-          temperature: 0.7,
-          topP: 0.8,
-          topK: 40
-        }
+          temperature: 0.65,
+          topP: 0.9,
+          topK: 40,
+          responseMimeType: 'application/json',
+          responseSchema: ARTICLE_JSON_SCHEMA,
+        },
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json() as any;
-      throw new Error(`Gemini API 호출 실패 (${response.status}): ${errorData.error?.message || response.statusText}`);
-    }
-
-    const data = await response.json() as any;
-    
-    // Gemini 응답 구조에서 텍스트 추출 (안전한 접근)
-    const candidates = data.candidates;
-    if (!candidates || candidates.length === 0) {
-      throw new Error('Gemini가 응답 후보를 생성하지 못했습니다.');
-    }
-    
-    let aiResponseText = candidates[0].content?.parts?.[0]?.text;
-    if (!aiResponseText) {
-      throw new Error('Gemini 응답에서 텍스트 내용을 찾을 수 없습니다.');
-    }
-
-    // 마크다운 코드 블록(```json ... ```)이 포함된 경우 순수 JSON만 추출
+    const raw = await response.text();
+    let data: Record<string, unknown>;
     try {
-      const jsonMatch = aiResponseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        aiResponseText = jsonMatch[0];
-      }
-      const aiResult = JSON.parse(aiResponseText);
-      return NextResponse.json({ success: true, ...aiResult });
-    } catch (parseError: any) {
-      console.error('AI JSON Parse Error:', parseError, 'Raw Text:', aiResponseText);
-      throw new Error(`AI 응답 해석 실패: JSON 형식이 아닙니다. (Raw: ${aiResponseText.substring(0, 50)}...)`);
+      data = JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      throw new Error(`Gemini 응답 파싱 실패 (${response.status}): ${raw.slice(0, 120)}`);
     }
 
-  } catch (error: any) {
+    if (!response.ok) {
+      const err = data as { error?: { message?: string } };
+      throw new Error(err.error?.message || `Gemini API 오류 (${response.status})`);
+    }
+
+    const candidates = data.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }> | undefined;
+    const text = candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error('Gemini가 빈 응답을 반환했습니다.');
+    }
+
+    let parsed: { title?: string; slug?: string; content?: string };
+    try {
+      parsed = JSON.parse(text) as { title?: string; slug?: string; content?: string };
+    } catch {
+      const m = text.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('AI 응답이 올바른 JSON이 아닙니다.');
+      parsed = JSON.parse(m[0]) as { title?: string; slug?: string; content?: string };
+    }
+
+    const title = String(parsed.title || '').trim();
+    const slug = String(parsed.slug || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/^-|-$/g, '');
+    const content = String(parsed.content || '').trim();
+
+    if (!title || !content) {
+      throw new Error('생성된 초안에 제목 또는 본문이 비어 있습니다.');
+    }
+
+    return NextResponse.json({
+      success: true,
+      title,
+      slug: slug || `article-${Date.now()}`,
+      content,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '기사 생성 중 오류가 발생했습니다.';
     console.error('AI Generate Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message || '기사 생성 중 오류가 발생했습니다.',
-      debug: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

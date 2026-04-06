@@ -1,38 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { assertAdminAuthorized, findEnvKey, getBindingsEnv } from '@/lib/admin-auth';
 
 export const runtime = 'edge';
 
 /**
- * Serper.dev를 이용한 최신 기술 뉴스 검색
+ * Serper.dev를 이용한 최신 기술 뉴스 검색 (관리자 대시보드 전용)
  */
 export async function POST(request: NextRequest) {
   try {
-    const { keyword } = await request.json() as { keyword: string };
-    const cfContext = getRequestContext();
-    const env = (cfContext?.env || process.env || {}) as any;
-    
-    // 환경 변수 이름을 앞뒤 공백 없이 찾아내는 정밀 매칭 함수
-    const findEnvKey = (target: string) => {
-      if (env[target]) return env[target];
-      const cleanKey = Object.keys(env).find(k => k.trim() === target);
-      return cleanKey ? env[cleanKey] : null;
-    };
-
-    const apiKey = findEnvKey('SERPER_API_KEY');
-
-    if (!apiKey) {
-      const availableKeys = Object.keys(env).join(', ');
-      const envSource = cfContext?.env ? 'Cloudflare Runtime' : 'Node.js Process';
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: `SERPER_API_KEY를 찾을 수 없습니다. (Source: ${envSource})\n현재 인식된 변수 목록: [${availableKeys || '없음'}]\n환경 변수 이름 앞뒤에 공백이 없는지 대시보드에서 꼭 확인해 주세요.` 
-      }, { status: 500 });
+    const body = (await request.json()) as { keyword?: string; password?: string };
+    const keyword = body.keyword?.trim();
+    const auth = assertAdminAuthorized(body.password);
+    if (!auth.ok) {
+      return NextResponse.json({ success: false, message: auth.message }, { status: 401 });
     }
 
-    const searchQuery = `${keyword} 3d printing robotics latest news`;
-    
+    if (!keyword) {
+      return NextResponse.json({ success: false, message: '키워드를 입력하세요.' }, { status: 400 });
+    }
+
+    const env = getBindingsEnv() as Record<string, unknown>;
+    const apiKey = findEnvKey(env, 'SERPER_API_KEY');
+
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'SERPER_API_KEY가 설정되지 않았습니다. Cloudflare Pages 환경 변수 또는 로컬 .dev.vars에 추가하세요.',
+        },
+        { status: 500 }
+      );
+    }
+
+    const searchQuery = `${keyword} 3d printing additive manufacturing news`;
+
     const response = await fetch('https://google.serper.dev/search', {
       method: 'POST',
       headers: {
@@ -41,30 +43,53 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         q: searchQuery,
-        gl: 'kr', // 한국 지역 결과 우선
-        hl: 'ko', // 한국어 결과 우선
-        num: 5,
+        gl: 'kr',
+        hl: 'ko',
+        num: 8,
       }),
     });
 
-    if (!response.ok) {
-      throw new Error('검색 API 호출 실패');
+    const rawText = await response.text();
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(rawText) as Record<string, unknown>;
+    } catch {
+      throw new Error(`검색 API 응답이 JSON이 아닙니다 (${response.status})`);
     }
 
-    const data = await response.json() as any;
-    const results = data.organic?.map((item: any) => ({
-      title: item.title,
-      link: item.link,
-      snippet: item.snippet,
-      source: item.source || new URL(item.link).hostname,
-    })) || [];
+    if (!response.ok) {
+      const msg =
+        typeof data.message === 'string'
+          ? data.message
+          : typeof data.error === 'string'
+            ? data.error
+            : rawText.slice(0, 200);
+      throw new Error(`검색 API 오류 (${response.status}): ${msg}`);
+    }
+
+    const organic = Array.isArray(data.organic) ? data.organic : [];
+    const results = organic.map((item: Record<string, unknown>) => {
+      const link = String(item.link || '');
+      let source = typeof item.source === 'string' ? item.source : '';
+      if (!source && link) {
+        try {
+          source = new URL(link).hostname;
+        } catch {
+          source = '';
+        }
+      }
+      return {
+        title: String(item.title || '(제목 없음)'),
+        link,
+        snippet: String(item.snippet || ''),
+        source,
+      };
+    });
 
     return NextResponse.json({ success: true, results });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '검색 중 오류가 발생했습니다.';
     console.error('AI Search Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message || '검색 중 오류가 발생했습니다.' 
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

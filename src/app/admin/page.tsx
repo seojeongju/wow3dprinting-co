@@ -1,7 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import AiToolbox from '@/components/AiToolbox';
@@ -239,13 +237,20 @@ export default function AdminPage() {
       )}
 
       {/* AI 어시스턴트 도구 상자 */}
-      <AiToolbox 
+      <AiToolbox
+        adminPassword={formData.password}
         onApply={(data) => {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             title: data.title,
             slug: data.slug,
-            content: data.content
+            content: data.content,
+          }));
+        }}
+        onAppendContent={(text) => {
+          setFormData((prev) => ({
+            ...prev,
+            content: prev.content ? `${prev.content.trimEnd()}\n\n${text}` : text,
           }));
         }}
       />
