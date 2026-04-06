@@ -188,7 +188,7 @@ export default function AiToolbox({ adminPassword = '', onApply, onAppendContent
           <div>
             <h3 className="text-sm font-black uppercase tracking-widest text-primary">AI 기사 스튜디오</h3>
             <p className="text-xs text-muted-foreground font-medium opacity-70">
-              자료 검색·초안 작성·문장 다듬기 (Gemini + Serper)
+              자료 검색·신문 기사 형식 초안·문장 다듬기 (AI + Serper)
             </p>
           </div>
         </div>
@@ -218,6 +218,9 @@ export default function AiToolbox({ adminPassword = '', onApply, onAppendContent
 
       {panel === 'draft' && (
         <div className="space-y-4">
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            생성되는 본문은 신문 기사 형식입니다. 첫 단락이 리드(5W1H 요약), 이후는 서술형 단락 위주이며 소제목·목록은 보조로만 씁니다.
+          </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"

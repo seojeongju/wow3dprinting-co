@@ -56,7 +56,8 @@ function shouldTryFallback(errMsg: string, httpStatus: number): boolean {
   );
 }
 
-const ARTICLE_SCHEMA_DESC = `반드시 JSON 한 덩어리만 출력하세요. 키: title(한국어 제목), slug(영문 소문자·숫자·하이픈), content(Markdown 본문).`;
+const ARTICLE_SCHEMA_DESC = `반드시 JSON 한 덩어리만 출력하세요. 키: title(한국어 제목), slug(영문 소문자·숫자·하이픈), content(Markdown 본문).
+content는 반드시 신문 기사 형식: (1) 첫 단락은 리드로 5W1H를 압축 요약 (2) 이후는 서술형 단락 위주, ## 소제목은 필요 시 1~3개만 (3) 불릿·나열은 보조로만 쓰고 본문 전체를 목록·에세이·강의록처럼 쓰지 말 것 (4) 사실과 전망·분석을 구분하고, 없는 인물·기관명·수치를 지어내지 말 것.`;
 
 async function postChatCompletions(
   url: string,
