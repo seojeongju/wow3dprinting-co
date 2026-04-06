@@ -1,7 +1,14 @@
 import { findEnvKey } from '@/lib/admin-auth';
 
-/** 월 소수 건이면 gpt-4o-mini로도 충분 (저렴) */
+/** OpenAI (유료·저가) */
 const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
+/** Groq Cloud 무료 티에 적합한 생산 모델 */
+const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
+
+const OPENAI_CHAT = 'https://api.openai.com/v1/chat/completions';
+const GROQ_CHAT = 'https://api.groq.com/openai/v1/chat/completions';
+
+export type AiBackend = 'groq' | 'gemini' | 'openai';
 
 export type AssistAction = 'rewrite' | 'expand' | 'shorten' | 'titles' | 'lead' | 'bullets';
 
@@ -14,21 +21,26 @@ const ASSIST_HINT: Record<AssistAction, string> = {
   bullets: '본문을 Markdown 불릿 목록으로 요약 정리하세요.',
 };
 
-function providerOrder(env: Record<string, unknown>): Array<'gemini' | 'openai'> {
+/**
+ * AI_PROVIDER:
+ * - auto: GROQ_API_KEY → GEMINI_API_KEY → OPENAI_API_KEY 순 (무료 우선)
+ * - groq | gemini | openai: 해당 키만 사용
+ */
+function providerOrder(env: Record<string, unknown>): AiBackend[] {
+  const groq = findEnvKey(env, 'GROQ_API_KEY');
   const gemini = findEnvKey(env, 'GEMINI_API_KEY');
   const openai = findEnvKey(env, 'OPENAI_API_KEY');
   const mode = (findEnvKey(env, 'AI_PROVIDER') || 'auto').toLowerCase();
 
-  if (mode === 'openai') {
-    return openai ? ['openai'] : [];
-  }
-  if (mode === 'gemini') {
-    return gemini ? ['gemini'] : [];
-  }
-  if (gemini && openai) return ['gemini', 'openai'];
-  if (gemini) return ['gemini'];
-  if (openai) return ['openai'];
-  return [];
+  if (mode === 'groq') return groq ? ['groq'] : [];
+  if (mode === 'gemini') return gemini ? ['gemini'] : [];
+  if (mode === 'openai') return openai ? ['openai'] : [];
+
+  const list: AiBackend[] = [];
+  if (groq) list.push('groq');
+  if (gemini) list.push('gemini');
+  if (openai) list.push('openai');
+  return list;
 }
 
 function shouldTryFallback(errMsg: string, httpStatus: number): boolean {
@@ -45,6 +57,65 @@ function shouldTryFallback(errMsg: string, httpStatus: number): boolean {
 }
 
 const ARTICLE_SCHEMA_DESC = `반드시 JSON 한 덩어리만 출력하세요. 키: title(한국어 제목), slug(영문 소문자·숫자·하이픈), content(Markdown 본문).`;
+
+async function postChatCompletions(
+  url: string,
+  apiKey: string,
+  label: string,
+  body: Record<string, unknown>
+): Promise<string> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const raw = await res.text();
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    const e = new Error(`${label} 응답 파싱 실패 (${res.status})`);
+    (e as Error & { status?: number }).status = res.status;
+    throw e;
+  }
+  if (!res.ok) {
+    const msg = (data as { error?: { message?: string } }).error?.message || raw.slice(0, 200);
+    const e = new Error(msg);
+    (e as Error & { status?: number }).status = res.status;
+    throw e;
+  }
+  const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
+  const text = choices?.[0]?.message?.content?.trim();
+  if (!text) {
+    const e = new Error(`${label}가 빈 응답을 반환했습니다.`);
+    (e as Error & { status?: number }).status = res.status;
+    throw e;
+  }
+  return text;
+}
+
+async function openaiStyleGenerateArticle(
+  url: string,
+  label: string,
+  apiKey: string,
+  model: string,
+  systemInstruction: string,
+  userText: string
+): Promise<{ title: string; slug: string; content: string }> {
+  const text = await postChatCompletions(url, apiKey, label, {
+    model,
+    temperature: 0.65,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: `${systemInstruction}\n\n${ARTICLE_SCHEMA_DESC}` },
+      { role: 'user', content: userText },
+    ],
+  });
+  return normalizeArticleJson(text);
+}
 
 async function geminiGenerateArticle(
   apiKey: string,
@@ -98,53 +169,6 @@ async function geminiGenerateArticle(
   return normalizeArticleJson(text);
 }
 
-async function openaiGenerateArticle(
-  apiKey: string,
-  model: string,
-  systemInstruction: string,
-  userText: string
-): Promise<{ title: string; slug: string; content: string }> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.65,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: `${systemInstruction}\n\n${ARTICLE_SCHEMA_DESC}` },
-        { role: 'user', content: userText },
-      ],
-    }),
-  });
-  const raw = await res.text();
-  let data: Record<string, unknown>;
-  try {
-    data = JSON.parse(raw) as Record<string, unknown>;
-  } catch {
-    const e = new Error(`OpenAI 응답 파싱 실패 (${res.status})`);
-    (e as Error & { status?: number }).status = res.status;
-    throw e;
-  }
-  if (!res.ok) {
-    const msg = (data as { error?: { message?: string } }).error?.message || raw.slice(0, 200);
-    const e = new Error(msg);
-    (e as Error & { status?: number }).status = res.status;
-    throw e;
-  }
-  const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
-  const text = choices?.[0]?.message?.content?.trim();
-  if (!text) {
-    const e = new Error('OpenAI가 빈 응답을 반환했습니다.');
-    (e as Error & { status?: number }).status = res.status;
-    throw e;
-  }
-  return normalizeArticleJson(text);
-}
-
 function normalizeArticleJson(text: string): { title: string; slug: string; content: string } {
   let parsed: { title?: string; slug?: string; content?: string };
   try {
@@ -167,34 +191,40 @@ function normalizeArticleJson(text: string): { title: string; slug: string; cont
 }
 
 /**
- * 기사 초안: AI_PROVIDER에 따라 순서대로 시도, 할당량/429 시 다음 제공자로 폴백
+ * 기사 초안: 순서대로 시도, 할당량/429 시 다음 제공자로 폴백
  */
 export async function generateArticleDraftWithFallback(
   env: Record<string, unknown>,
   systemInstruction: string,
   userText: string
-): Promise<{ title: string; slug: string; content: string; usedProvider: 'gemini' | 'openai' }> {
+): Promise<{ title: string; slug: string; content: string; usedProvider: AiBackend }> {
   const order = providerOrder(env);
   if (order.length === 0) {
     throw new Error(
-      'AI 키가 없습니다. Cloudflare 환경 변수에 GEMINI_API_KEY 또는 OPENAI_API_KEY를 설정하세요. (Gemini 무료 한도 초과 시 OPENAI_API_KEY 권장)'
+      'AI 키가 없습니다. Cloudflare 환경 변수에 GROQ_API_KEY(권장·무료 티), 또는 GEMINI_API_KEY / OPENAI_API_KEY 중 하나를 설정하세요.'
     );
   }
 
   const geminiKey = findEnvKey(env, 'GEMINI_API_KEY');
   const openaiKey = findEnvKey(env, 'OPENAI_API_KEY');
+  const groqKey = findEnvKey(env, 'GROQ_API_KEY');
   const openaiModel = findEnvKey(env, 'OPENAI_MODEL') || DEFAULT_OPENAI_MODEL;
+  const groqModel = findEnvKey(env, 'GROQ_MODEL') || DEFAULT_GROQ_MODEL;
 
   let lastError = '';
 
   for (const p of order) {
     try {
+      if (p === 'groq' && groqKey) {
+        const data = await openaiStyleGenerateArticle(GROQ_CHAT, 'Groq', groqKey, groqModel, systemInstruction, userText);
+        return { ...data, usedProvider: 'groq' };
+      }
       if (p === 'gemini' && geminiKey) {
         const data = await geminiGenerateArticle(geminiKey, systemInstruction, userText);
         return { ...data, usedProvider: 'gemini' };
       }
       if (p === 'openai' && openaiKey) {
-        const data = await openaiGenerateArticle(openaiKey, openaiModel, systemInstruction, userText);
+        const data = await openaiStyleGenerateArticle(OPENAI_CHAT, 'OpenAI', openaiKey, openaiModel, systemInstruction, userText);
         return { ...data, usedProvider: 'openai' };
       }
     } catch (e: unknown) {
@@ -271,7 +301,9 @@ async function geminiAssist(
   return { text: out };
 }
 
-async function openaiAssist(
+async function openaiCompatAssist(
+  url: string,
+  label: string,
   apiKey: string,
   model: string,
   instruction: string,
@@ -281,44 +313,20 @@ async function openaiAssist(
     ? '답은 반드시 JSON 문자열 배열만 출력하세요. 예: ["제목1","제목2"]. 다른 설명 없음.'
     : '한국어로 요청을 수행하세요. 불필요한 서론 없이 결과 본문만 출력하세요.';
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.5,
-      ...(wantJsonArray ? { response_format: { type: 'json_object' } } : {}),
-      messages: [
-        { role: 'system', content: system },
-        {
-          role: 'user',
-          content: wantJsonArray
-            ? `${instruction}\n\nJSON 객체로 답하세요: {"titles":["제목1","제목2",...]} (5개 내외)`
-            : instruction,
-        },
-      ],
-    }),
+  const out = await postChatCompletions(url, apiKey, label, {
+    model,
+    temperature: 0.5,
+    ...(wantJsonArray ? { response_format: { type: 'json_object' } } : {}),
+    messages: [
+      { role: 'system', content: system },
+      {
+        role: 'user',
+        content: wantJsonArray
+          ? `${instruction}\n\nJSON 객체로 답하세요: {"titles":["제목1","제목2",...]} (5개 내외)`
+          : instruction,
+      },
+    ],
   });
-  const raw = await res.text();
-  let data: Record<string, unknown>;
-  try {
-    data = JSON.parse(raw) as Record<string, unknown>;
-  } catch {
-    const e = new Error(`OpenAI 응답 오류 (${res.status})`);
-    (e as Error & { status?: number }).status = res.status;
-    throw e;
-  }
-  if (!res.ok) {
-    const msg = (data as { error?: { message?: string } }).error?.message || raw.slice(0, 200);
-    const e = new Error(msg);
-    (e as Error & { status?: number }).status = res.status;
-    throw e;
-  }
-  const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
-  let out = choices?.[0]?.message?.content?.trim() || '';
 
   if (wantJsonArray) {
     try {
@@ -348,10 +356,10 @@ export async function runAssistWithFallback(
   action: AssistAction,
   text: string,
   context?: string
-): Promise<{ result: string; titles: string[]; usedProvider: 'gemini' | 'openai' }> {
+): Promise<{ result: string; titles: string[]; usedProvider: AiBackend }> {
   const order = providerOrder(env);
   if (order.length === 0) {
-    throw new Error('GEMINI_API_KEY 또는 OPENAI_API_KEY가 필요합니다.');
+    throw new Error('GROQ_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY 중 하나가 필요합니다.');
   }
 
   const ctx = context?.trim();
@@ -361,18 +369,24 @@ export async function runAssistWithFallback(
 
   const geminiKey = findEnvKey(env, 'GEMINI_API_KEY');
   const openaiKey = findEnvKey(env, 'OPENAI_API_KEY');
+  const groqKey = findEnvKey(env, 'GROQ_API_KEY');
   const openaiModel = findEnvKey(env, 'OPENAI_MODEL') || DEFAULT_OPENAI_MODEL;
+  const groqModel = findEnvKey(env, 'GROQ_MODEL') || DEFAULT_GROQ_MODEL;
 
   let lastError = '';
 
   for (const p of order) {
     try {
+      if (p === 'groq' && groqKey) {
+        const r = await openaiCompatAssist(GROQ_CHAT, 'Groq', groqKey, groqModel, instruction, wantJsonArray);
+        return { result: r.text, titles: r.titles ?? [], usedProvider: 'groq' };
+      }
       if (p === 'gemini' && geminiKey) {
         const r = await geminiAssist(geminiKey, instruction, wantJsonArray);
         return { result: r.text, titles: r.titles ?? [], usedProvider: 'gemini' };
       }
       if (p === 'openai' && openaiKey) {
-        const r = await openaiAssist(openaiKey, openaiModel, instruction, wantJsonArray);
+        const r = await openaiCompatAssist(OPENAI_CHAT, 'OpenAI', openaiKey, openaiModel, instruction, wantJsonArray);
         return { result: r.text, titles: r.titles ?? [], usedProvider: 'openai' };
       }
     } catch (e: unknown) {

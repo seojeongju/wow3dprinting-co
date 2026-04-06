@@ -5,7 +5,7 @@ import { runAssistWithFallback, type AssistAction } from '@/lib/ai-providers';
 export const runtime = 'edge';
 
 /**
- * 문장 어시스턴트: Gemini 실패 시 OpenAI 폴백
+ * 문장 어시스턴트: Groq 우선(auto), 실패 시 Gemini·OpenAI 폴백
  */
 export async function POST(request: NextRequest) {
   try {

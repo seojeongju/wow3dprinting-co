@@ -5,8 +5,9 @@ import { generateArticleDraftWithFallback } from '@/lib/ai-providers';
 export const runtime = 'edge';
 
 /**
- * 기사 초안: Gemini → 할당량/429 시 OpenAI(gpt-4o-mini) 자동 폴백
- * 환경: GEMINI_API_KEY, OPENAI_API_KEY, AI_PROVIDER=auto|gemini|openai, OPENAI_MODEL(선택)
+ * 기사 초안: AI_PROVIDER 순서대로 시도 후 폴백
+ * auto(기본): Groq → Gemini → OpenAI (무료 티 우선)
+ * 환경: GROQ_API_KEY, GROQ_MODEL(선택), GEMINI_API_KEY, OPENAI_API_KEY, AI_PROVIDER
  */
 export async function POST(request: NextRequest) {
   try {
