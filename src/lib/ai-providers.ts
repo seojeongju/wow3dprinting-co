@@ -23,7 +23,7 @@ const ASSIST_HINT: Record<AssistAction, string> = {
 
 /**
  * AI_PROVIDER:
- * - auto: GROQ_API_KEY → GEMINI_API_KEY → OPENAI_API_KEY 순 (무료 우선)
+ * - auto: Groq → OpenAI → Gemini (키가 있는 제공자만 순서대로)
  * - groq | gemini | openai: 해당 키만 사용
  */
 function providerOrder(env: Record<string, unknown>): AiBackend[] {
@@ -38,8 +38,8 @@ function providerOrder(env: Record<string, unknown>): AiBackend[] {
 
   const list: AiBackend[] = [];
   if (groq) list.push('groq');
-  if (gemini) list.push('gemini');
   if (openai) list.push('openai');
+  if (gemini) list.push('gemini');
   return list;
 }
 

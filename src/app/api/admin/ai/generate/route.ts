@@ -6,7 +6,7 @@ export const runtime = 'edge';
 
 /**
  * 기사 초안: AI_PROVIDER 순서대로 시도 후 폴백
- * auto(기본): Groq → Gemini → OpenAI (무료 티 우선)
+ * auto(기본): Groq → OpenAI → Gemini
  * 환경: GROQ_API_KEY, GROQ_MODEL(선택), GEMINI_API_KEY, OPENAI_API_KEY, AI_PROVIDER
  */
 export async function POST(request: NextRequest) {
