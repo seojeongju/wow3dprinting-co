@@ -1,0 +1,35 @@
+# Cloudflare Pages 배포 (next-on-pages). 리포지토리 Secrets 필요:
+# CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+name: Deploy Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Cloudflare Pages
+        run: npm run pages:build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: wow3dprinting-co
+          directory: .vercel/output
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
