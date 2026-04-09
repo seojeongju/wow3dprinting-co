@@ -112,7 +112,7 @@ function DigitalBrandingHero() {
            <div className="w-12 h-12 bg-[#FF5D00] rounded-2xl flex items-center justify-center rotate-3 shadow-lg shadow-[#FF5D00]/20">
               <Zap className="w-6 h-6 text-white fill-white" />
            </div>
-           <span className="text-xs font-black uppercase tracking-[0.5em] text-[#FF5D00]">The Intelligence Radar</span>
+           <span className="text-xs font-black uppercase tracking-[0.5em] text-[#FF5D00]">최첨단 테크 레이더</span>
         </div>
         
         <h1 className="text-5xl md:text-8xl font-black text-[#1A1A1E] tracking-tighter leading-none mb-8 italic">
@@ -128,11 +128,11 @@ function DigitalBrandingHero() {
 
         <div className="flex items-center gap-6">
            <Link href="#feed" className="px-10 py-5 bg-[#1A1A1E] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-[#FF5D00] hover:shadow-2xl hover:shadow-[#FF5D00]/30 transition-all duration-500">
-              Explore Latest Intel
+              최신 기사 탐색하기
            </Link>
            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#ADB5BD]">
               <Radio className="w-4 h-4 text-[#FF5D00] animate-pulse" />
-              Real-time_Sync_Active
+              실시간 업데이트 활성화
            </div>
         </div>
       </div>
@@ -180,7 +180,7 @@ function TrendingBar({ items }: { items: ArticleWithCategory[] }) {
       <div className="flex items-center justify-between border-b border-gray-100 pb-4">
         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-gray-400 flex items-center gap-3 italic">
            <TrendingUp className="w-4 h-4 text-[#FF5D00]" />
-           Trending Intel
+           주목받는 테크 트렌드
         </h2>
         <div className="flex gap-1">
           <div className="w-1.5 h-1.5 rounded-full bg-[#FF5D00]" />
@@ -231,11 +231,11 @@ export default function Wow3dHomePage({
             <div className="flex items-center gap-10">
                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em]">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#FF5D00] shadow-[0_0_10px_rgba(255,93,0,0.5)] animate-pulse" />
-                  Live_Satellite_Data
+                  실시간 데이터 연동
                </div>
                <div className="hidden lg:flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 border-l border-gray-100 pl-10">
                   <Award className="w-3.5 h-3.5" />
-                  Verified_Media
+                  공식 인증 미디어
                </div>
             </div>
             <div className="mt-4 md:mt-0 flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">
@@ -253,7 +253,7 @@ export default function Wow3dHomePage({
            <div className="lg:col-span-8 flex flex-col gap-12">
               <div className="flex items-center gap-4">
                  <span className="w-16 h-0.5 bg-[#FF5D00]" />
-                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">Technology Intel Feed</h2>
+                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">최신 기술 동향 피드</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                  {feedTop.map((item) => (
@@ -269,10 +269,10 @@ export default function Wow3dHomePage({
               <div className="mt-14 p-8 rounded-3xl bg-[#FF5D00] shadow-[0_20px_40px_rgba(255,93,0,0.3)] relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-2xl" />
                  <Zap className="relative w-8 h-8 text-white mb-4 fill-white" />
-                 <h3 className="relative text-xl font-black text-white italic tracking-tighter mb-4">WOW3D <br />Partnership Radar</h3>
+                 <h3 className="relative text-xl font-black text-white italic tracking-tighter mb-4">WOW3D <br />비즈니스 파트너십</h3>
                  <p className="relative text-[10px] font-bold uppercase tracking-widest text-white/70 mb-8 leading-relaxed">3D 테크 기업을 위한 최상의 광고 솔루션</p>
                  <Link href="mailto:wow3d16@naver.com" className="relative block w-full py-4 bg-white text-[#FF5D00] text-[10px] font-black uppercase tracking-[0.2em] text-center rounded-xl hover:bg-white/90 transition-colors shadow-lg">
-                    Connect with Us
+                    제휴 및 광고 문의하기
                  </Link>
               </div>
            </aside>
@@ -282,8 +282,8 @@ export default function Wow3dHomePage({
         <section className="mb-32">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div className="flex flex-col gap-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#FF5D00] tracking-widest">Global Archives</p>
-              <h2 className="text-4xl font-black text-[#1A1A1E] tracking-tighter italic lg:text-5xl">Deep Intel Streams</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#FF5D00] tracking-widest">기사 아카이브</p>
+              <h2 className="text-4xl font-black text-[#1A1A1E] tracking-tighter italic lg:text-5xl">심층 분석 리포트</h2>
             </div>
           </div>
 
@@ -296,7 +296,7 @@ export default function Wow3dHomePage({
           {feedRest.length === 0 && currentPage > 1 && (
             <div className="py-40 text-center border-2 border-dashed border-gray-100 rounded-[4rem] bg-gray-50/50">
                <Cpu className="w-16 h-16 text-gray-200 mx-auto mb-8 animate-pulse" />
-               <p className="text-xl font-black uppercase italic tracking-widest text-gray-300">No Data Synchronized Yet</p>
+               <p className="text-xl font-black uppercase italic tracking-widest text-gray-300">아직 등록된 기사가 없습니다</p>
             </div>
           )}
         </section>

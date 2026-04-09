@@ -240,7 +240,7 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
             </select>
           ) : (
             <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase opacity-40">
-              상태: {formData.status.toUpperCase()}
+              상태: {formData.status === 'published' ? '공개됨' : '임시저장'}
             </span>
           )}
         </div>
