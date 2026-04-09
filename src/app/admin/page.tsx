@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import AiToolbox from '@/components/AiToolbox';
+import DocumentUploader from '@/components/DocumentUploader';
 import { 
   Clock, 
   ExternalLink, 
@@ -14,7 +15,10 @@ import {
   Laptop,
   ArrowRight,
   Filter,
-  Trash2
+  Trash2,
+  Image as ImageIcon,
+  UploadCloud,
+  X
 } from 'lucide-react';
 
 interface Category {
@@ -47,6 +51,7 @@ export default function AdminPage() {
     content: '',
     status: 'draft',
     password: '',
+    thumbnailKey: '',
   });
 
   // 수정용 기사 데이터 로드
@@ -58,7 +63,9 @@ export default function AdminPage() {
       content: item.content,
       status: item.status,
       password: formData.password, // 패스워드는 유지
+      thumbnailKey: item.thumbnailKey || '',
     });
+    setThumbnailPreview(item.thumbnailKey ? (item.thumbnailKey.startsWith('http') || item.thumbnailKey.startsWith('//') ? item.thumbnailKey : `/api/assets/${item.thumbnailKey}`) : null);
     setPublishToTimes(item.targetSites === 'times' || item.targetSites === 'both');
     setPublishToWow3d(item.targetSites === 'wow3d' || item.targetSites === 'both');
     
@@ -80,8 +87,10 @@ export default function AdminPage() {
       content: '',
       status: 'draft',
       password: formData.password,
+      thumbnailKey: '',
     });
     setThumbnailFile(null);
+    setThumbnailPreview(null);
   };
 
   // 기사 목록 불러오기 (비밀번호 미설정 환경에서도 동작)
@@ -141,6 +150,13 @@ export default function AdminPage() {
   const [publishToWow3d, setPublishToWow3d] = useState(true);  // 와우3D프린팅타임즈
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  const handleClearThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    setFormData(prev => ({ ...prev, thumbnailKey: '' }));
+  };
 
   // 카테고리 로딩 로직 삭제 (사용 안함)
 
@@ -157,7 +173,10 @@ export default function AdminPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setThumbnailFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setThumbnailFile(file);
+      setThumbnailPreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, thumbnailKey: '' })); // 새로운 파일 업로드 시 기존 키 초기화
     }
   };
 
@@ -350,15 +369,53 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="grid gap-2">
-          <label className="text-sm font-bold">썸네일 이미지</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="border p-2 rounded-md bg-background text-sm"
-          />
+        <div className="grid gap-3">
+          <label className="text-sm font-bold flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-primary" />
+            썸네일 이미지 업로드
+          </label>
+          <div className="relative group rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors w-full aspect-video md:aspect-[21/9] flex flex-col items-center justify-center">
+            {thumbnailPreview ? (
+              <>
+                <img 
+                  src={thumbnailPreview.startsWith('//') ? `https:${thumbnailPreview}` : thumbnailPreview} 
+                  alt="Thumbnail Preview" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                   <label className="cursor-pointer p-4 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-sm transition-colors">
+                      <UploadCloud className="w-6 h-6" />
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                   </label>
+                   <button 
+                     type="button" 
+                     onClick={handleClearThumbnail}
+                     className="p-4 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-colors"
+                   >
+                     <X className="w-6 h-6" />
+                   </button>
+                </div>
+              </>
+            ) : (
+              <label className="w-full h-full cursor-pointer flex flex-col items-center justify-center p-8 text-center text-primary/60 hover:text-primary transition-colors">
+                <UploadCloud className="w-12 h-12 mb-4 opacity-50" />
+                <span className="text-sm font-black tracking-widest uppercase mb-2">클릭하여 이미지 업로드</span>
+                <span className="text-[10px] uppercase font-bold opacity-70">JPG, PNG, WEBP 지원</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              </label>
+            )}
+          </div>
         </div>
+
+        {/* 텍스트 추출기 (PDF, DOCX) */}
+        <DocumentUploader 
+          onExtract={(text) => {
+            setFormData(prev => ({
+              ...prev,
+              content: prev.content ? `${prev.content.trimEnd()}\n\n${text}` : text
+            }));
+          }} 
+        />
 
         <div className="grid gap-2">
           <label className="text-sm font-bold">본문 내용 (Markdown) *</label>
