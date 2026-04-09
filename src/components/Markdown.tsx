@@ -8,7 +8,7 @@ interface MarkdownProps {
 
 export default function Markdown({ content }: MarkdownProps) {
   return (
-    <div className="prose prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:rounded-3xl prose-img:shadow-2xl break-words break-keep overflow-hidden whitespace-pre-wrap w-full">
+    <div className="prose prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:rounded-3xl prose-img:shadow-2xl break-words break-all whitespace-pre-wrap w-full overflow-wrap-anywhere">
       <ReactMarkdown
         components={{
           img: ({node, ...props}) => (

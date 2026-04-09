@@ -332,7 +332,7 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
         onChange={handleContentImageUpload} 
       />
 
-      <div className="prose prose-lg prose-zinc max-w-none w-full break-words break-keep overflow-hidden prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">
+      <div className="prose prose-lg prose-zinc max-w-none w-full break-words break-all whitespace-pre-wrap overflow-wrap-anywhere prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">
         {isEditing ? (
           <div className="space-y-6">
             <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
