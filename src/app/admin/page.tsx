@@ -396,7 +396,7 @@ export default function AdminPage() {
             <ImageIcon className="w-5 h-5 text-primary" />
             썸네일 이미지 업로드
           </label>
-          <div className="relative group rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors w-full aspect-video md:aspect-[21/9] flex flex-col items-center justify-center">
+          <div className="relative group rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors w-full max-w-2xl mx-auto aspect-[3/1] flex flex-col items-center justify-center cursor-pointer">
             {thumbnailPreview ? (
               <>
                 <img 
@@ -405,24 +405,24 @@ export default function AdminPage() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                   <label className="cursor-pointer p-4 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-sm transition-colors">
-                      <UploadCloud className="w-6 h-6" />
+                   <label className="cursor-pointer p-3 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-sm transition-colors">
+                      <UploadCloud className="w-5 h-5" />
                       <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                    </label>
                    <button 
                      type="button" 
                      onClick={handleClearThumbnail}
-                     className="p-4 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-colors"
+                     className="p-3 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-colors"
                    >
-                     <X className="w-6 h-6" />
+                     <X className="w-5 h-5" />
                    </button>
                 </div>
               </>
             ) : (
-              <label className="w-full h-full cursor-pointer flex flex-col items-center justify-center p-8 text-center text-primary/60 hover:text-primary transition-colors">
-                <UploadCloud className="w-12 h-12 mb-4 opacity-50" />
-                <span className="text-sm font-black tracking-widest uppercase mb-2">클릭하여 이미지 업로드</span>
-                <span className="text-[10px] uppercase font-bold opacity-70">JPG, PNG, WEBP 지원</span>
+              <label className="w-full h-full cursor-pointer flex flex-col items-center justify-center p-4 text-center text-primary/60 hover:text-primary transition-colors">
+                <UploadCloud className="w-8 h-8 mb-2 opacity-50" />
+                <span className="text-[11px] font-black tracking-widest uppercase mb-1">클릭하여 썸네일 업로드</span>
+                <span className="text-[9px] uppercase font-bold opacity-60">JPG, PNG, WEBP 지원</span>
                 <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </label>
             )}
