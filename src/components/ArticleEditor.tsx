@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { Edit3, Trash2, Save, X, Loader2, Settings, ArrowLeft, CheckCircle, PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -352,10 +352,12 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
               </div>
             </div>
             
-            <TiptapEditor 
-              content={formData.content} 
-              onChange={handleEditorChange} 
-            />
+            <Suspense fallback={<div className="h-[600px] w-full bg-muted animate-pulse rounded-[2.5rem]" />}>
+              <TiptapEditor 
+                content={formData.content} 
+                onChange={handleEditorChange} 
+              />
+            </Suspense>
           </div>
         ) : (
           <div className="prose prose-lg prose-zinc max-w-none w-full break-all break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">

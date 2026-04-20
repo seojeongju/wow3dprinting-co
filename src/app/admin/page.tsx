@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import AiToolbox from '@/components/AiToolbox';
 import DocumentUploader from '@/components/DocumentUploader';
@@ -437,10 +437,12 @@ export default function AdminPage() {
               <Edit3 className="w-4 h-4 text-primary" />
               스마트 콘텐츠 에디터 *
             </label>
-            <TiptapEditor 
-              content={formData.content} 
-              onChange={handleEditorChange} 
-            />
+            <Suspense fallback={<div className="h-[600px] w-full bg-muted animate-pulse rounded-[2.5rem]" />}>
+              <TiptapEditor 
+                content={formData.content} 
+                onChange={handleEditorChange} 
+              />
+            </Suspense>
             <p className="text-[10px] text-muted-foreground italic mt-2">
               * 상단 툴바를 이용해 사진, 동영상, 인용구 등을 삽입할 수 있습니다. 이미지는 클릭하여 정렬 및 크기 조절이 가능합니다.
             </p>
