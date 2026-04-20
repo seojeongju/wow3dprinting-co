@@ -264,7 +264,10 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
 
         {/* Bubble Menu for Images/Videos */}
         {editor && (
-          <BubbleMenu editor={editor} shouldShow={({ editor }) => editor.isActive('image') || editor.isActive('video')} tippyOptions={{ duration: 100 }}>
+          <BubbleMenu 
+            editor={editor} 
+            shouldShow={({ editor }: any) => editor.isActive('image') || editor.isActive('video')}
+          >
             <div className="bg-white border shadow-2xl rounded-2xl flex items-center p-2 gap-2 backdrop-blur-xl bg-white/90">
               <button 
                 onClick={() => editor.chain().focus().setTextAlign('left').run()}
