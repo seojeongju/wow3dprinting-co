@@ -1,18 +1,19 @@
 'use client';
 
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
-import Youtube from '@tiptap/extension-youtube';
-import Placeholder from '@tiptap/extension-placeholder';
-import Underline from '@tiptap/extension-underline';
-import Highlight from '@tiptap/extension-highlight';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
+import { StarterKit } from '@tiptap/starter-kit';
+import { Image } from '@tiptap/extension-image';
+import { Link } from '@tiptap/extension-link';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { Youtube } from '@tiptap/extension-youtube';
+import { Placeholder } from '@tiptap/extension-placeholder';
+import { Underline } from '@tiptap/extension-underline';
+import { Highlight } from '@tiptap/extension-highlight';
 import { Video } from '@/lib/tiptap-extensions/Video';
 import { 
   Image as ImageIcon, 
