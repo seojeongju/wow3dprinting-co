@@ -50,6 +50,7 @@ export default function AdminPage() {
   const [articles, setArticles] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'draft'>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
@@ -191,12 +192,90 @@ export default function AdminPage() {
     setFormData(prev => ({ ...prev, content: html }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 이미지 자동 최적화 (16:9 크롭 + 리사이징)
+  const processImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+
+          // 목표 비율 16:9
+          const targetRatio = 16 / 9;
+          let sourceWidth = img.width;
+          let sourceHeight = img.height;
+          let sourceX = 0;
+          let sourceY = 0;
+
+          // 크롭 계산 (Center Crop)
+          if (sourceWidth / sourceHeight > targetRatio) {
+            // 원본이 더 와이드함 -> 좌우를 자름
+            const newWidth = sourceHeight * targetRatio;
+            sourceX = (sourceWidth - newWidth) / 2;
+            sourceWidth = newWidth;
+          } else {
+            // 원본이 더 세로로 김 -> 상하를 자름
+            const newHeight = sourceWidth / targetRatio;
+            sourceY = (sourceHeight - newHeight) / 2;
+            sourceHeight = newHeight;
+          }
+
+          // 리사이징 해상도 결정 (가로 최대 1280px)
+          const outputWidth = Math.min(1280, sourceWidth);
+          const outputHeight = outputWidth / targetRatio;
+
+          canvas.width = outputWidth;
+          canvas.height = outputHeight;
+
+          // 고화질 드로잉
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight);
+
+          // WebP 변환
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                type: 'image/webp',
+                lastModified: Date.now(),
+              });
+              resolve(newFile);
+            } else {
+              resolve(file);
+            }
+          }, 'image/webp', 0.85); // 85% 품질로 압축
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setThumbnailFile(file);
-      setThumbnailPreview(URL.createObjectURL(file));
-      setFormData(prev => ({ ...prev, thumbnailKey: '' })); // 새로운 파일 업로드 시 기존 키 초기화
+      setIsProcessingImage(true);
+      try {
+        const processedFile = await processImage(file);
+        setThumbnailFile(processedFile);
+        setThumbnailPreview(URL.createObjectURL(processedFile));
+        setFormData(prev => ({ ...prev, thumbnailKey: '' }));
+      } catch (err) {
+        console.error('Image processing error:', err);
+        // 오류 시 원본 그대로 사용 시도
+        setThumbnailFile(file);
+        setThumbnailPreview(URL.createObjectURL(file));
+      } finally {
+        setIsProcessingImage(false);
+      }
     }
   };
 
@@ -397,7 +476,12 @@ export default function AdminPage() {
             썸네일 이미지 업로드
           </label>
           <div className="relative group rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors w-full max-w-2xl mx-auto aspect-[3/1] flex flex-col items-center justify-center cursor-pointer">
-            {thumbnailPreview ? (
+            {isProcessingImage ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center text-primary/60">
+                <Loader2 className="w-12 h-12 mb-4 animate-spin opacity-50" />
+                <span className="text-[11px] font-black tracking-widest uppercase animate-pulse">이미지 최적화 중...</span>
+              </div>
+            ) : thumbnailPreview ? (
               <>
                 <img 
                   src={thumbnailPreview.startsWith('//') ? `https:${thumbnailPreview}` : thumbnailPreview} 
