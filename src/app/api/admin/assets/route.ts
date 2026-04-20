@@ -22,9 +22,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: '업로드할 파일이 없습니다.' }, { status: 400 });
     }
 
-    // 2. 파일 검증
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ message: '이미지 파일만 업로드 가능합니다.' }, { status: 400 });
+    // 2. 파일 검증 (이미지 및 동영상 허용)
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      return NextResponse.json({ message: '이미지 또는 동영상 파일만 업로드 가능합니다.' }, { status: 400 });
     }
 
     // 3. R2 업로드 준비

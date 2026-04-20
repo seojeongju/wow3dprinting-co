@@ -6,9 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import Markdown from '@/components/Markdown';
-import TurndownService from 'turndown';
-
-const turndownService = new TurndownService();
+import TiptapEditor from '@/components/TiptapEditor';
 
 interface ArticleEditorProps {
   article: any;
@@ -111,22 +109,8 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
     }
   };
 
-  // 미리보기 영역에서의 직접 편집 동기화
-  const handlePreviewInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const html = e.currentTarget.innerHTML;
-    if (!html || html === '<br>') {
-      setFormData(prev => ({ ...prev, content: '' }));
-      return;
-    }
-
-    const isMarkdownHint = formData.content.includes('#') || formData.content.includes('**') || formData.content.includes('!](');
-    
-    if (isMarkdownHint) {
-      const markdown = turndownService.turndown(html);
-      setFormData(prev => ({ ...prev, content: markdown }));
-    } else {
-      setFormData(prev => ({ ...prev, content: html }));
-    }
+  const handleEditorChange = (html: string) => {
+    setFormData(prev => ({ ...prev, content: html }));
   };
 
   const handleSave = async () => {
@@ -353,59 +337,25 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
         onChange={handleContentImageUpload} 
       />
 
-      <div className="prose prose-lg prose-zinc max-w-none w-full break-all break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">
+      <div className="w-full">
         {isEditing ? (
           <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-60">
+            <div className="flex items-center justify-between p-4 bg-primary/[0.03] rounded-2xl border border-primary/10">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>기사 본문 Markdown / HTML 편집 중</span>
+                <span>스마트 콘텐츠 에디터 활성화 중</span>
               </div>
-              <button
-                onClick={() => contentImageInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 bg-background border text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-muted transition-all active:scale-95 shadow-sm"
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-primary" />
-                본문 이미지 추가
-              </button>
             </div>
-            <textarea
-              ref={textareaRef}
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full min-h-[500px] bg-muted/30 border-none rounded-[2rem] p-8 font-mono text-base leading-relaxed focus:ring-2 focus:ring-primary outline-none focus:bg-background transition-all"
-              placeholder="여기에 기사 내용을 작성하세요..."
+            
+            <TiptapEditor 
+              content={formData.content} 
+              onChange={handleEditorChange} 
             />
-
-            {/* 실시간 미리보기 영역 (Live Preview) - 이제 직접 편집 가능 */}
-            <div className="mt-16 pt-16 border-t-2 border-dashed border-muted">
-              <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-3 opacity-40">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <h3 className="text-xs font-black uppercase tracking-[0.3em]">실시간 편집 미리보기 (Visual Edit)</h3>
-                </div>
-                <div className="text-[10px] font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  Click to Edit Directly
-                </div>
-              </div>
-              <div 
-                contentEditable={true}
-                onInput={handlePreviewInput}
-                suppressContentEditableWarning={true}
-                className="bg-primary/[0.01] rounded-[2.5rem] p-10 border border-primary/5 shadow-inner outline-none focus:ring-4 focus:ring-primary/5 transition-all min-h-[300px]"
-                dangerouslySetInnerHTML={{ 
-                  __html: formData.content.startsWith('<') ? formData.content : '' 
-                }}
-              >
-                {!formData.content.startsWith('<') && (
-                  <Markdown content={formData.content} />
-                )}
-              </div>
-              <p className="text-[10px] text-center text-muted-foreground mt-4 italic">미리보기 영역에서 텍스트를 직접 수정하면 본문에 즉시 반영됩니다.</p>
-            </div>
           </div>
         ) : (
-          <Markdown content={formData.content} />
+          <div className="prose prose-lg prose-zinc max-w-none w-full break-all break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">
+            <Markdown content={formData.content} />
+          </div>
         )}
       </div>
 
