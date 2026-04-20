@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import AiToolbox from '@/components/AiToolbox';
-import DocumentUploader from '@/components/DocumentUploader';
+import dynamic from 'next/dynamic';
 import { 
   Clock, 
   ExternalLink, 
@@ -22,12 +21,19 @@ import {
   Eye,
   Type
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import Markdown from '@/components/Markdown';
-
 const TiptapEditor = dynamic(() => import('@/components/TiptapEditor'), { 
   ssr: false,
   loading: () => <div className="h-[600px] w-full bg-muted animate-pulse rounded-[2.5rem] flex items-center justify-center text-muted-foreground font-bold">에디터를 불러오는 중...</div>
+});
+
+const AiToolbox = dynamic(() => import('@/components/AiToolbox'), { 
+  ssr: false,
+  loading: () => <div className="h-[200px] w-full bg-primary/5 animate-pulse rounded-3xl" />
+});
+
+const DocumentUploader = dynamic(() => import('@/components/DocumentUploader'), { 
+  ssr: false,
+  loading: () => <div className="h-[80px] w-full bg-primary/5 animate-pulse rounded-2xl" />
 });
 
 interface Category {
@@ -270,23 +276,25 @@ export default function AdminPage() {
       )}
 
       {/* AI 어시스턴트 도구 상자 */}
-      <AiToolbox
-        adminPassword={formData.password}
-        onApply={(data) => {
-          setFormData((prev) => ({
-            ...prev,
-            title: data.title,
-            slug: data.slug,
-            content: data.content,
-          }));
-        }}
-        onAppendContent={(text) => {
-          setFormData((prev) => ({
-            ...prev,
-            content: prev.content ? `${prev.content.trimEnd()}\n\n${text}` : text,
-          }));
-        }}
-      />
+      <Suspense fallback={<div className="h-[200px] w-full bg-primary/5 animate-pulse rounded-3xl" />}>
+        <AiToolbox
+          adminPassword={formData.password}
+          onApply={(data) => {
+            setFormData((prev) => ({
+              ...prev,
+              title: data.title,
+              slug: data.slug,
+              content: data.content,
+            }));
+          }}
+          onAppendContent={(text) => {
+            setFormData((prev) => ({
+              ...prev,
+              content: prev.content ? `${prev.content.trimEnd()}\n\n${text}` : text,
+            }));
+          }}
+        />
+      </Suspense>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-muted/20 p-6 rounded-lg border">
         
@@ -422,14 +430,16 @@ export default function AdminPage() {
         </div>
 
         {/* 텍스트 추출기 (PDF, DOCX) */}
-        <DocumentUploader 
-          onExtract={(text) => {
-            setFormData(prev => ({
-              ...prev,
-              content: prev.content ? `${prev.content.trimEnd()}\n\n${text}` : text
-            }));
-          }} 
-        />
+        <Suspense fallback={<div className="h-[80px] w-full bg-primary/5 animate-pulse rounded-2xl" />}>
+          <DocumentUploader 
+            onExtract={(text) => {
+              setFormData(prev => ({
+                ...prev,
+                content: prev.content ? `${prev.content.trimEnd()}\n\n${text}` : text
+              }));
+            }} 
+          />
+        </Suspense>
 
         <div className="grid grid-cols-1 gap-6">
           <div className="grid gap-2">
