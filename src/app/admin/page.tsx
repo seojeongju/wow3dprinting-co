@@ -418,12 +418,12 @@ export default function AdminPage() {
         />
 
         <div className="grid gap-2">
-          <label className="text-sm font-bold">본문 내용 (Markdown) *</label>
+          <label className="text-sm font-bold">본문 내용 (Markdown / HTML) *</label>
           <textarea
             name="content"
             value={formData.content}
             onChange={handleChange}
-            placeholder="# 마크다운으로 작성하세요..."
+            placeholder="# 마크다운 또는 <html> 태그로 작성하세요..."
             required
             rows={15}
             className="border p-3 rounded-md bg-background font-mono text-sm focus:ring-2 focus:ring-primary outline-none resize-y"

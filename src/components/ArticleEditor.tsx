@@ -338,7 +338,7 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
             <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-60">
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>기사 본문 마크다운 편집 중</span>
+                <span>기사 본문 Markdown / HTML 편집 중</span>
               </div>
               <button
                 onClick={() => contentImageInputRef.current?.click()}

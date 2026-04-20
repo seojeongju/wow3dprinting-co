@@ -1,6 +1,7 @@
 'use client';
 
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 interface MarkdownProps {
   content: string;
@@ -10,6 +11,7 @@ export default function Markdown({ content }: MarkdownProps) {
   return (
     <div className="prose prose-zinc dark:prose-invert max-w-none w-full break-all break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:rounded-3xl prose-img:shadow-2xl">
       <ReactMarkdown
+        rehypePlugins={[rehypeRaw]}
         components={{
           img: ({node, ...props}) => (
             <img 
