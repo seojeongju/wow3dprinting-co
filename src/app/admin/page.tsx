@@ -18,8 +18,14 @@ import {
   Trash2,
   Image as ImageIcon,
   UploadCloud,
-  X
+  X,
+  Eye,
+  Type
 } from 'lucide-react';
+import TurndownService from 'turndown';
+import Markdown from '@/components/Markdown';
+
+const turndownService = new TurndownService();
 
 interface Category {
   id: number;
@@ -168,6 +174,27 @@ export default function AdminPage() {
     if (name === 'title' && !formData.slug) {
       const autoSlug = value.toLowerCase().replace(/[^a-z0-9가-힣]+/g, '-').replace(/(^-|-$)+/g, '');
       setFormData((prev) => ({ ...prev, slug: autoSlug }));
+    }
+  };
+
+  // 미리보기 영역에서의 직접 편집 동기화
+  const handlePreviewInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const html = e.currentTarget.innerHTML;
+    // HTML이 비어있으면 초기화
+    if (!html || html === '<br>') {
+      setFormData(prev => ({ ...prev, content: '' }));
+      return;
+    }
+
+    // 마크다운 형식인지 확인 (간단한 판별)
+    const isMarkdownHint = formData.content.includes('#') || formData.content.includes('**') || formData.content.includes('!](');
+    
+    if (isMarkdownHint) {
+      const markdown = turndownService.turndown(html);
+      setFormData(prev => ({ ...prev, content: markdown }));
+    } else {
+      // HTML 원본 유지 (사용자가 HTML로 작성 중인 경우)
+      setFormData(prev => ({ ...prev, content: html }));
     }
   };
 
@@ -417,17 +444,52 @@ export default function AdminPage() {
           }} 
         />
 
-        <div className="grid gap-2">
-          <label className="text-sm font-bold">본문 내용 (Markdown / HTML) *</label>
-          <textarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            placeholder="# 마크다운 또는 <html> 태그로 작성하세요..."
-            required
-            rows={15}
-            className="border p-3 rounded-md bg-background font-mono text-sm focus:ring-2 focus:ring-primary outline-none resize-y"
-          />
+        <div className="grid grid-cols-1 gap-6">
+          <div className="grid gap-2">
+            <label className="text-sm font-bold flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              본문 내용 (Markdown / HTML 소스) *
+            </label>
+            <textarea
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              placeholder="# 마크다운 또는 <html> 태그로 작성하세요..."
+              required
+              rows={15}
+              className="border p-3 rounded-md bg-background font-mono text-sm focus:ring-2 focus:ring-primary outline-none resize-y"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-bold flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary" />
+                실시간 편집 미리보기 (Visual Editor)
+              </div>
+              <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded font-medium">편집 가능</span>
+            </label>
+            <div className="border rounded-md bg-white overflow-hidden">
+               <div className="bg-muted/30 px-4 py-2 border-b flex items-center gap-2">
+                 <Type className="w-3 h-3 text-muted-foreground" />
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">WYSIWYG Preview Mode</span>
+               </div>
+               <div 
+                 contentEditable={true}
+                 onInput={handlePreviewInput}
+                 suppressContentEditableWarning={true}
+                 className="p-8 min-h-[400px] outline-none prose prose-zinc max-w-none break-words"
+                 dangerouslySetInnerHTML={{ 
+                   __html: formData.content.startsWith('<') ? formData.content : '' // MD인 경우 아래 Markdown 컴포넌트 활용 고려
+                 }}
+               >
+                 {!formData.content.startsWith('<') && (
+                    <Markdown content={formData.content} />
+                 )}
+               </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground italic mt-1">* 위의 미리보기 영역을 클릭하여 내용을 직접 수정할 수 있습니다. 수정 시 소스 코드가 자동 동기화됩니다.</p>
+          </div>
         </div>
 
         <div className="pt-4 flex justify-end gap-4 border-t">
