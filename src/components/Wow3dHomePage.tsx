@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Clock, ArrowRight, TrendingUp, Cpu, Zap, Radio, Award, Layers } from 'lucide-react';
+import { getExcerpt } from '@/lib/text-utils';
 
 type Article = {
   id: number;
@@ -31,18 +32,6 @@ interface Wow3dHomePageProps {
   dbError: string | null;
 }
 
-// 고성능 마크다운 요약기 (이미지/링크 완벽 제거)
-function getExcerpt(content: string, maxLen = 120) {
-  const plain = content
-    .replace(/!\[.*?\]\(.*?\)/g, '')
-    .replace(/\[.*?\]\(.*?\)/g, '')
-    .replace(/https?:\/\/\S+/g, '')
-    .replace(/[#*`>\-_]/g, '')
-    .replace(/\n+/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-  return plain.length > maxLen ? plain.slice(0, maxLen) + '...' : plain;
-}
 
 function timeAgo(date: Date | null) {
   if (!date) return '';

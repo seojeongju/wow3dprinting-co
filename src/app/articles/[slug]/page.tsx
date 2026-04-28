@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { isAdmin as checkIsAdmin } from '@/lib/auth_edge';
 import ArticleEditor from '@/components/ArticleEditor';
+import { stripHtmlAndMarkdown } from '@/lib/text-utils';
 
 export const runtime = 'edge';
 
@@ -37,11 +38,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   
   const siteTitle = isWow3d ? '와우3D프린팅타임즈' : '3D프린팅타임즈';
 
-  // 마크다운 태그를 제거하고 순수 텍스트만 추출 (간단한 처리)
-  const cleanDescription = data.article.content
-    .replace(/[#*`>]/g, '')
-    .slice(0, 160)
-    .trim();
+  // HTML 및 마크다운 태그를 제거하고 순수 텍스트만 추출
+  const cleanDescription = stripHtmlAndMarkdown(data.article.content).slice(0, 160);
 
   return {
     title: `${data.article.title} | ${siteTitle}`,

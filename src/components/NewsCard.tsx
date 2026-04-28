@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { Article, Category } from '@/lib/db/schema';
 import { Clock, ArrowRight } from 'lucide-react';
+import { getExcerpt } from '@/lib/text-utils';
 
 interface NewsCardProps {
   article: Article & { category: Category | null };
@@ -38,16 +39,7 @@ export default function NewsCard({ article, priority, compact, horizontal }: New
 
   const imageUrl = getProcessedImageUrl(article.thumbnailKey, fallbackImage);
 
-  const cleanExcerpt = (content: string) => {
-    return content
-      .replace(/!\[.*?\]\((.*?)\)/g, '')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
-      .replace(/[#*`>_-]/g, '')
-      .replace(/\n+/g, ' ')
-      .trim();
-  };
-
-  const excerpt = cleanExcerpt(article.content).slice(0, 120);
+  const excerpt = getExcerpt(article.content, 120);
 
   if (horizontal) {
     return (
