@@ -19,8 +19,10 @@ import {
   UploadCloud,
   X,
   Eye,
-  Type
+  Type,
+  Loader2
 } from 'lucide-react';
+
 const TiptapEditor = dynamic(() => import('@/components/TiptapEditor'), { 
   ssr: false,
   loading: () => <div className="h-[600px] w-full bg-muted animate-pulse rounded-[2.5rem] flex items-center justify-center text-muted-foreground font-bold">에디터를 불러오는 중...</div>
