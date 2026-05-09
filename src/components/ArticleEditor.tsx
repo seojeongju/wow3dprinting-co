@@ -33,6 +33,15 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const contentImageInputRef = useRef<HTMLInputElement>(null);
+  const safeAuthor = typeof article.authorId === 'string' && article.authorId.trim().length > 0
+    ? article.authorId.toUpperCase()
+    : '관리자';
+  const publishedDate = (() => {
+    if (!article?.publishedAt) return '최근';
+    const parsed = new Date(article.publishedAt);
+    if (Number.isNaN(parsed.getTime())) return '최근';
+    return format(parsed, 'yyyy년 M월 d일');
+  })();
 
   // 텍스트 영역 높이 자동 조절
   useEffect(() => {
@@ -270,8 +279,8 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
         
         <div className="flex items-center justify-between border-y py-6 mt-4">
           <div className="flex flex-col">
-            <span className="font-bold text-foreground">작성: {article.authorId.toUpperCase() || '관리자'}</span>
-            <span>게시일: {article.publishedAt ? format(new Date(article.publishedAt), 'yyyy년 M월 d일') : '최근'}</span>
+            <span className="font-bold text-foreground">작성: {safeAuthor}</span>
+            <span>게시일: {publishedDate}</span>
           </div>
         </div>
       </header>

@@ -9,9 +9,17 @@ import { stripHtmlAndMarkdown } from '@/lib/text-utils';
 
 export const runtime = 'edge';
 
+function safeDecodeSlug(slug: string) {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 async function getArticle(slug: string) {
   const db = getDb();
-  const decodedSlug = decodeURIComponent(slug); // 한글 슬러그 디코딩 추가
+  const decodedSlug = safeDecodeSlug(slug);
   const results = await db
     .select({
       article: articles,
@@ -22,12 +30,21 @@ async function getArticle(slug: string) {
     .where(eq(articles.slug, decodedSlug))
     .limit(1);
 
-  return results[0];
+  return results[0] ?? null;
+}
+
+async function getArticleSafe(slug: string) {
+  try {
+    return await getArticle(slug);
+  } catch (error) {
+    console.error('Article fetch failed:', error);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await getArticle(slug);
+  const data = await getArticleSafe(slug);
   if (!data) return { title: 'Article Not Found' };
 
   // 호스트에 따른 사이트명 설정
@@ -39,7 +56,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteTitle = isWow3d ? '와우3D프린팅타임즈' : '3D프린팅타임즈';
 
   // HTML 및 마크다운 태그를 제거하고 순수 텍스트만 추출
-  const cleanDescription = stripHtmlAndMarkdown(data.article.content).slice(0, 160);
+  const rawContent = typeof data.article.content === 'string' ? data.article.content : '';
+  const cleanDescription = stripHtmlAndMarkdown(rawContent).slice(0, 160);
 
   return {
     title: `${data.article.title} | ${siteTitle}`,
@@ -54,11 +72,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await getArticle(slug);
+  const data = await getArticleSafe(slug);
   const isAdmin = await checkIsAdmin();
 
   if (!data || (data.article.status !== 'published' && !isAdmin)) {
-    if (!data) notFound();
+    notFound();
   }
 
   const { article, category } = data;
