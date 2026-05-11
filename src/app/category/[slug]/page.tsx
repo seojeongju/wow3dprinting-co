@@ -1,15 +1,76 @@
-import { getDb } from '@/lib/db';
-import { articles, categories } from '@/lib/db/schema';
-import { eq, desc, and, count } from 'drizzle-orm';
-import { notFound } from 'next/navigation';
-import NewsCard from '@/components/NewsCard';
-import Pagination from '@/components/Pagination';
+import type { Metadata } from "next";
+import { getDb } from "@/lib/db";
+import { articles, categories } from "@/lib/db/schema";
+import { eq, desc, and, count, or } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import NewsCard from "@/components/NewsCard";
+import Pagination from "@/components/Pagination";
+import { buildCategoryUrl, getSiteContext } from "@/lib/seo";
 
 export const runtime = 'edge';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const page = Math.max(1, parseInt(resolvedSearchParams.page as string) || 1);
+  const db = getDb();
+  const category = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.slug, slug))
+    .get();
+
+  if (!category) {
+    return {
+      title: "카테고리를 찾을 수 없습니다",
+    };
+  }
+
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const { baseUrl, siteTitle, isWow3d } = getSiteContext(host);
+  const canonicalUrl = buildCategoryUrl(baseUrl, category.slug, page);
+  const title = page > 1 ? `${category.name} - ${page}페이지` : category.name;
+  const description =
+    category.description ||
+    `${siteTitle}의 ${category.name} 카테고리 기사 모음입니다.`;
+  const defaultImage = `${baseUrl}/${isWow3d ? "og-image.png" : "og-image-times.png"}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${title} | ${siteTitle}`,
+      description,
+      url: canonicalUrl,
+      type: "website",
+      siteName: siteTitle,
+      locale: "ko_KR",
+      images: [
+        {
+          url: defaultImage,
+          alt: `${category.name} - ${siteTitle}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | ${siteTitle}`,
+      description,
+      images: [defaultImage],
+    },
+  };
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
@@ -19,6 +80,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const offset = (page - 1) * limit;
 
   const db = getDb();
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const { siteId } = getSiteContext(host);
+  const siteFilter = or(eq(articles.targetSites, siteId), eq(articles.targetSites, "both"));
 
   // 1. 해당 슬러그의 카테고리 정보 가져오기
   const category = await db.select().from(categories).where(eq(categories.slug, resolvedParams.slug)).get();
@@ -31,7 +96,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const totalArticlesRes = await db
     .select({ total: count() })
     .from(articles)
-    .where(and(eq(articles.categoryId, category.id), eq(articles.status, 'published')))
+    .where(and(eq(articles.categoryId, category.id), eq(articles.status, 'published'), siteFilter))
     .get();
   
   const totalArticles = totalArticlesRes?.total || 0;
@@ -41,7 +106,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const categoryArticles = await db
     .select()
     .from(articles)
-    .where(and(eq(articles.categoryId, category.id), eq(articles.status, 'published')))
+    .where(and(eq(articles.categoryId, category.id), eq(articles.status, 'published'), siteFilter))
     .orderBy(desc(articles.publishedAt))
     .limit(limit)
     .offset(offset)
