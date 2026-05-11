@@ -6,6 +6,12 @@ import Wow3dHeader from "@/components/Wow3dHeader";
 import Footer from "@/components/Footer";
 import { headers } from "next/headers";
 
+const NAVER_SITE_VERIFICATION = "98de0b1c5e16e3c096d8b3b7326f8aa42f4d123e";
+const GOOGLE_SITE_VERIFICATION = {
+  wow3d: process.env.GOOGLE_SITE_VERIFICATION_WOW3D,
+  times: "0dyd_R-ICR2ROtT1Bs72Gxi3E7gjPl_qKonnS4ejJMw",
+} as const;
+
 const notoLines = Noto_Sans_KR({
   variable: "--font-noto-sans",
   subsets: ["latin"],
@@ -25,6 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
   // 도메인 판별 (포트 번호 제외)
   const domain = host.split(':')[0];
   const isWow3d = domain === 'wow3dprinting.com' || domain.endsWith('.wow3dprinting.com');
+  const googleVerification = isWow3d
+    ? GOOGLE_SITE_VERIFICATION.wow3d
+    : GOOGLE_SITE_VERIFICATION.times;
 
   if (isWow3d) {
     // wow3dprinting.com 전용 메타데이터
@@ -66,9 +75,9 @@ export async function generateMetadata(): Promise<Metadata> {
         images: ['https://wow3dprinting.com/og-image.png'],
       },
       verification: {
-        google: 'google-site-verification-id', // 필요한 경우 추가
+        ...(googleVerification ? { google: googleVerification } : {}),
         other: {
-          'naver-site-verification': '98de0b1c5e16e3c096d8b3b7326f8aa42f4d123e',
+          'naver-site-verification': NAVER_SITE_VERIFICATION,
         },
       },
       alternates: {
@@ -120,8 +129,9 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ['https://wow3dprinting.co.kr/og-image-times.png'],
     },
     verification: {
+      ...(googleVerification ? { google: googleVerification } : {}),
       other: {
-        'naver-site-verification': '98de0b1c5e16e3c096d8b3b7326f8aa42f4d123e',
+        'naver-site-verification': NAVER_SITE_VERIFICATION,
       },
     },
     alternates: {
