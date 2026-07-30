@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
 import { articles, categories } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { isAdmin as checkIsAdmin } from "@/lib/auth_edge";
@@ -10,8 +10,10 @@ import { stripHtmlAndMarkdown } from "@/lib/text-utils";
 import {
   buildArticleUrl,
   getSiteContext,
+  isArticleVisibleOnSite,
   resolveAssetUrl,
   serializeJsonLd,
+  toValidDate,
 } from "@/lib/seo";
 
 export const runtime = 'edge';
@@ -24,9 +26,12 @@ function safeDecodeSlug(slug: string) {
   }
 }
 
-async function getArticle(slug: string) {
+async function getArticle(slug: string, siteId?: "times" | "wow3d") {
   const db = getDb();
   const decodedSlug = safeDecodeSlug(slug);
+  const siteFilter = siteId
+    ? or(eq(articles.targetSites, siteId), eq(articles.targetSites, "both"))
+    : undefined;
   const results = await db
     .select({
       article: articles,
@@ -34,15 +39,19 @@ async function getArticle(slug: string) {
     })
     .from(articles)
     .leftJoin(categories, eq(articles.categoryId, categories.id))
-    .where(eq(articles.slug, decodedSlug))
+    .where(
+      siteFilter
+        ? and(eq(articles.slug, decodedSlug), siteFilter)
+        : eq(articles.slug, decodedSlug)
+    )
     .limit(1);
 
   return results[0] ?? null;
 }
 
-async function getArticleSafe(slug: string) {
+async function getArticleSafe(slug: string, siteId?: "times" | "wow3d") {
   try {
-    return await getArticle(slug);
+    return await getArticle(slug, siteId);
   } catch (error) {
     console.error('Article fetch failed:', error);
     return null;
@@ -55,12 +64,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const data = await getArticleSafe(slug);
-  if (!data) return { title: 'Article Not Found' };
-
   const headersList = await headers();
   const host = headersList.get('host') || '';
-  const { baseUrl, siteTitle, isWow3d } = getSiteContext(host);
+  const { baseUrl, siteTitle, isWow3d, siteId } = getSiteContext(host);
+  const data = await getArticleSafe(slug, siteId);
+  if (!data || data.article.status !== "published") {
+    return { title: 'Article Not Found' };
+  }
 
   // HTML 및 마크다운 태그를 제거하고 순수 텍스트만 추출
   const rawContent = typeof data.article.content === 'string' ? data.article.content : '';
@@ -69,12 +79,10 @@ export async function generateMetadata({
   const defaultImage = `${baseUrl}/${isWow3d ? "og-image.png" : "og-image-times.png"}`;
   const imageUrl =
     resolveAssetUrl(baseUrl, data.article.thumbnailKey) || defaultImage;
-  const publishedTime = data.article.publishedAt
-    ? new Date(data.article.publishedAt).toISOString()
-    : undefined;
-  const modifiedTime = data.article.updatedAt
-    ? new Date(data.article.updatedAt).toISOString()
-    : publishedTime;
+  const publishedDate = toValidDate(data.article.publishedAt);
+  const modifiedDate = toValidDate(data.article.updatedAt) || publishedDate;
+  const publishedTime = publishedDate?.toISOString();
+  const modifiedTime = modifiedDate?.toISOString();
 
   return {
     title: data.article.title,
@@ -109,35 +117,37 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await getArticleSafe(slug);
-  const isAdmin = await checkIsAdmin();
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const { baseUrl, siteTitle, isWow3d, siteId } = getSiteContext(host);
+  const [data, isAdmin] = await Promise.all([
+    getArticleSafe(slug),
+    checkIsAdmin(),
+  ]);
 
-  if (!data || (data.article.status !== 'published' && !isAdmin)) {
+  if (
+    !data ||
+    !isArticleVisibleOnSite(data.article.targetSites, siteId) ||
+    (data.article.status !== 'published' && !isAdmin)
+  ) {
     notFound();
   }
 
   const { article, category } = data;
-  const headersList = await headers();
-  const host = headersList.get("host") || "";
-  const { baseUrl, siteTitle, isWow3d } = getSiteContext(host);
   const articleUrl = buildArticleUrl(baseUrl, article.slug);
   const cleanDescription = stripHtmlAndMarkdown(article.content).slice(0, 160);
   const defaultImage = `${baseUrl}/${isWow3d ? "og-image.png" : "og-image-times.png"}`;
   const imageUrl =
     resolveAssetUrl(baseUrl, article.thumbnailKey) || defaultImage;
+  const publishedDate = toValidDate(article.publishedAt);
+  const modifiedDate = toValidDate(article.updatedAt) || publishedDate;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline: article.title,
     description: cleanDescription,
-    datePublished: article.publishedAt
-      ? new Date(article.publishedAt).toISOString()
-      : undefined,
-    dateModified: article.updatedAt
-      ? new Date(article.updatedAt).toISOString()
-      : article.publishedAt
-        ? new Date(article.publishedAt).toISOString()
-        : undefined,
+    datePublished: publishedDate?.toISOString(),
+    dateModified: modifiedDate?.toISOString(),
     mainEntityOfPage: articleUrl,
     url: articleUrl,
     image: [imageUrl],

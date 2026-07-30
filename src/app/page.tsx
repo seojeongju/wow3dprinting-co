@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db';
 import { articles, categories } from '@/lib/db/schema';
-import { desc, eq, count, or } from 'drizzle-orm';
+import { and, desc, eq, count, or } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import NewsCard from '@/components/NewsCard';
 import Pagination from '@/components/Pagination';
@@ -50,7 +50,7 @@ async function getLatestArticles(page: number = 1, siteId: 'times' | 'wow3d' = '
       })
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .where(eq(articles.status, 'published'))
+      .where(and(eq(articles.status, 'published'), siteFilter))
       .orderBy(desc(articles.publishedAt))
       .limit(ARTICLES_PER_PAGE)
       .offset((page - 1) * ARTICLES_PER_PAGE);
@@ -65,10 +65,14 @@ async function getLatestArticles(page: number = 1, siteId: 'times' | 'wow3d' = '
 async function getTotalArticlesCount(siteId: 'times' | 'wow3d' = 'times') {
   try {
     const db = getDb();
+    const siteFilter = siteId === 'wow3d'
+      ? or(eq(articles.targetSites, 'wow3d'), eq(articles.targetSites, 'both'))
+      : or(eq(articles.targetSites, 'times'), eq(articles.targetSites, 'both'));
+
     const result = await db
       .select({ value: count() })
       .from(articles)
-      .where(eq(articles.status, 'published'))
+      .where(and(eq(articles.status, 'published'), siteFilter))
       .get();
 
     return result?.value || 0;

@@ -15,6 +15,20 @@ export function getSiteContext(host: string) {
   };
 }
 
+export function isArticleVisibleOnSite(
+  targetSites: SiteId | "both" | string | null | undefined,
+  siteId: SiteId,
+) {
+  return targetSites === "both" || targetSites === siteId;
+}
+
+export function toValidDate(value: Date | string | number | null | undefined) {
+  if (!value) return null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function buildArticleUrl(baseUrl: string, slug: string) {
   return new URL(`/articles/${encodeURIComponent(slug)}`, baseUrl).toString();
 }

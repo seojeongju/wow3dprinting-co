@@ -3,14 +3,17 @@ import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/auth_edge';
 import { getDb } from '@/lib/db';
 import { articles } from '@/lib/db/schema';
-import { desc, eq } from 'drizzle-orm';
-import { Search, Bell, Menu, Printer, Flame, Cpu, Zap } from 'lucide-react';
+import { and, desc, eq, or } from 'drizzle-orm';
+import { Search, Bell, Menu, Printer, Cpu, Zap } from 'lucide-react';
 
-async function getLatestTicker() {
+async function getLatestTicker(siteId: 'times' | 'wow3d') {
   try {
     const db = getDb();
+    const siteFilter = siteId === 'wow3d'
+      ? or(eq(articles.targetSites, 'wow3d'), eq(articles.targetSites, 'both'))
+      : or(eq(articles.targetSites, 'times'), eq(articles.targetSites, 'both'));
     return await db.select({ title: articles.title, slug: articles.slug })
-      .from(articles).where(eq(articles.status, 'published'))
+      .from(articles).where(and(eq(articles.status, 'published'), siteFilter))
       .orderBy(desc(articles.publishedAt)).limit(5);
   } catch { return []; }
 }
@@ -18,7 +21,11 @@ async function getLatestTicker() {
 export default async function Wow3dHeader() {
   const user = await getSessionUser();
   const isAdmin = user?.role === 'admin' || user?.role === 'editor';
-  const tickerArticles = await getLatestTicker();
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const siteId: 'times' | 'wow3d' =
+    host.includes('wow3dprinting.com') && !host.includes('.co.kr') ? 'wow3d' : 'times';
+  const tickerArticles = await getLatestTicker(siteId);
 
   const navItems = [
     { label: 'Intelligence', href: '/' },

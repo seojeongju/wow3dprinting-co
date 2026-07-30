@@ -3,19 +3,22 @@ import { Search, Menu, Radio, PlusCircle, Zap, Bell, Cpu } from 'lucide-react';
 import { getSessionUser } from '@/lib/auth_edge';
 import { getDb } from '@/lib/db';
 import { articles } from '@/lib/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { headers } from 'next/headers';
 
-async function getLatestTickerArticles() {
+async function getLatestTickerArticles(siteId: 'times' | 'wow3d') {
   try {
     const db = getDb();
+    const siteFilter = siteId === 'wow3d'
+      ? or(eq(articles.targetSites, 'wow3d'), eq(articles.targetSites, 'both'))
+      : or(eq(articles.targetSites, 'times'), eq(articles.targetSites, 'both'));
     const results = await db
       .select({
         title: articles.title,
         slug: articles.slug,
       })
       .from(articles)
-      .where(eq(articles.status, 'published'))
+      .where(and(eq(articles.status, 'published'), siteFilter))
       .orderBy(desc(articles.publishedAt))
       .limit(5);
     return results;
@@ -28,18 +31,16 @@ async function getLatestTickerArticles() {
 export default async function Header() {
   const user = await getSessionUser();
   const isAdmin = user?.role === 'admin' || user?.role === 'editor';
-  const tickerArticles = await getLatestTickerArticles();
 
   // host 헤더로 사이트 분기
   const headersList = await headers();
   const host = headersList.get('host') || '';
   const isWow3d = host.includes('wow3dprinting.com') && !host.includes('.co.kr');
+  const siteId: 'times' | 'wow3d' = isWow3d ? 'wow3d' : 'times';
+  const tickerArticles = await getLatestTickerArticles(siteId);
 
   // 사이트별 테마 설정
-  const siteName = isWow3d ? '와우3D' : '3D';
-  const siteSubtitle = isWow3d ? '프린팅타임즈' : 'PRINTING';
   const siteTagline = isWow3d ? 'TIMES ・ PREMIUM' : 'TIMES AI INTELLIGENCE';
-  const primaryColor = isWow3d ? '#F97316' : undefined; // 오렌지 vs 기본 teal
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
