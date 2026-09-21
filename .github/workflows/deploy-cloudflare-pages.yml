@@ -5,12 +5,14 @@ name: Deploy Cloudflare Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      deployments: write
     steps:
       - uses: actions/checkout@v4
 
@@ -23,13 +25,12 @@ jobs:
         run: npm ci
 
       - name: Build for Cloudflare Pages
-        run: npm run pages:build
+        run: npx @cloudflare/next-on-pages
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: wow3dprinting-co
-          directory: .vercel/output
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          # next-on-pages 결과물: Worker는 .vercel/output/static/_worker.js
+          command: pages deploy .vercel/output/static --project-name=wow3dprinting-co --commit-dirty=true
