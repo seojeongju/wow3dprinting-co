@@ -1,56 +1,94 @@
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-
 interface ServerMarkdownProps {
   content: string;
 }
 
 function looksLikeHtml(content: string) {
-  return /<\/?(p|div|h[1-6]|ul|ol|li|table|img|figure|section|article|span)\b/i.test(
+  return /<\/?(p|div|h[1-6]|ul|ol|li|table|img|figure|section|article|span|br)\b/i.test(
     content,
   );
 }
 
-/**
- * 서버 전용 본문 렌더러.
- * TipTap HTML·Markdown 모두 지원해 크롤러가 본문을 읽을 수 있게 합니다.
- */
-export default function ServerMarkdown({ content }: ServerMarkdownProps) {
-  const value = content || '';
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
-  // TipTap 등 HTML 본문은 그대로 출력 (검색엔진 SSR용)
-  if (looksLikeHtml(value)) {
-    return (
-      <div
-        className="prose prose-zinc dark:prose-invert max-w-none w-full min-w-0 overflow-x-hidden break-words prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:max-w-full prose-img:h-auto prose-img:rounded-[2.5rem] prose-img:shadow-2xl [&_img]:max-w-full [&_img]:h-auto"
-        dangerouslySetInnerHTML={{ __html: value }}
-      />
+/** Edge/SSR 안전한 경량 마크다운 → HTML (hooks/react-markdown 미사용) */
+function markdownToHtml(markdown: string) {
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  const html: string[] = [];
+  let inList = false;
+
+  const flushList = () => {
+    if (inList) {
+      html.push("</ul>");
+      inList = false;
+    }
+  };
+
+  const inline = (text: string) => {
+    let out = escapeHtml(text);
+    out = out.replace(
+      /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,
+      '<img src="$2" alt="$1" loading="lazy" style="max-width:100%;height:auto;display:block;margin:2rem auto" />',
     );
+    out = out.replace(
+      /\[([^\]]+)\]\(([^)\s]+)\)/g,
+      '<a href="$2" rel="noopener noreferrer">$1</a>',
+    );
+    out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+    return out;
+  };
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) {
+      flushList();
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushList();
+      const level = heading[1].length;
+      html.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      if (!inList) {
+        html.push("<ul>");
+        inList = true;
+      }
+      html.push(`<li>${inline(line.replace(/^[-*]\s+/, ""))}</li>`);
+      continue;
+    }
+
+    flushList();
+    html.push(`<p>${inline(line)}</p>`);
   }
 
+  flushList();
+  return html.join("\n");
+}
+
+/**
+ * 서버 전용 본문 렌더러.
+ * react-markdown(hooks)을 쓰지 않아 Edge 빌드/SSR이 안정적입니다.
+ */
+export default function ServerMarkdown({ content }: ServerMarkdownProps) {
+  const value = content || "";
+  const html = looksLikeHtml(value) ? value : markdownToHtml(value);
+
   return (
-    <div className="prose prose-zinc dark:prose-invert max-w-none w-full min-w-0 overflow-x-hidden break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:rounded-3xl prose-img:shadow-2xl">
-      <ReactMarkdown
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          img: ({ className, ...props }) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              {...props}
-              loading="lazy"
-              className={`max-w-full h-auto rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border border-gray-100 bg-gray-50/30 ring-1 ring-black/5 ${className ?? ''}`}
-              style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '3.5rem auto' }}
-            />
-          ),
-          a: ({ href, children, ...props }) => (
-            <a href={href} rel="noopener noreferrer" {...props}>
-              {children}
-            </a>
-          ),
-        }}
-      >
-        {value}
-      </ReactMarkdown>
-    </div>
+    <div
+      className="prose prose-zinc dark:prose-invert max-w-none w-full min-w-0 overflow-x-hidden break-words prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:max-w-full prose-img:h-auto prose-img:rounded-[2.5rem] prose-img:shadow-2xl [&_img]:max-w-full [&_img]:h-auto"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }
