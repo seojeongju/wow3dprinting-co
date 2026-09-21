@@ -70,11 +70,11 @@ function ArticleImage({ src, fallbackContent, alt, className }: { src: string | 
   if (!imageSrc) return null;
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
-      <img 
-        src={imageSrc} 
-        alt={alt} 
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+    <div className={`relative overflow-hidden bg-gray-50 ${className}`}>
+      <img
+        src={imageSrc}
+        alt={alt}
+        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
       />
     </div>
   );

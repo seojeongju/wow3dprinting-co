@@ -40,5 +40,27 @@ h1, h2, h3 {
 }
 
 .prose {
-  @apply max-w-none leading-relaxed;
+  @apply max-w-none leading-relaxed min-w-0;
+}
+
+/* 삽입 이미지/미디어: 컨테이너 너비에 맞춰 자동 축소, 잘림 방지 */
+.prose img,
+.prose video,
+.ProseMirror img,
+.ProseMirror video,
+article img,
+article video {
+  max-width: 100% !important;
+  height: auto !important;
+  width: auto;
+}
+
+.prose table,
+.ProseMirror table {
+  max-width: 100%;
+}
+
+.ProseMirror {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }

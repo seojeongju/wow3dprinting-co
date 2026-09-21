@@ -7,27 +7,45 @@ import Pagination from '@/components/Pagination';
 import Wow3dHomePage from '@/components/Wow3dHomePage';
 import Link from 'next/link';
 import { Zap, TrendingUp, BarChart3, Globe } from 'lucide-react';
+import { getSiteContext } from '@/lib/seo';
 
 export const runtime = 'edge';
 
 const ARTICLES_PER_PAGE = 12; // 1 Hero + 3 Side + 8 Grid
 
-export async function generateMetadata() {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
   const headersList = await headers();
   const host = headersList.get('host') || '';
-  const domain = host.split(':')[0];
-  const isWow3d = domain === 'wow3dprinting.com' || domain.endsWith('.wow3dprinting.com');
-
-  if (isWow3d) {
-    return {
-      title: '와우3D프린팅타임즈 | 3D 프린팅 기술 인텔리전스 미디어',
-      description: '국내 유일 프리미엄 3D 프린팅 전문 미디어. 최첨단 3D 프린팅 기술, 산업 동향, 장비 리뷰 및 제조 인텔리전스를 제공합니다.',
-    };
-  }
+  const { baseUrl, siteTitle, siteDescription, isWow3d, ogImage } = getSiteContext(host);
+  const params = searchParams ? await searchParams : {};
+  const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const canonical = page > 1 ? `${baseUrl}/?page=${page}` : baseUrl;
+  const title = page > 1
+    ? `${siteTitle} - ${page}페이지`
+    : (isWow3d
+      ? '와우3D프린팅타임즈 | 3D 프린팅 기술 인텔리전스 미디어'
+      : '3D프린팅타임즈 | AI · 3D 프린팅 · 로보틱스 인텔리전스');
 
   return {
-    title: '3D프린팅타임즈 | AI · 3D 프린팅 · 로보틱스 인텔리전스',
-    description: '첨단 제조 기술, 머신러닝 혁신, AI·3D 프린팅·로보틱스 최신 트렌드를 가장 먼저 전달하는 국내 최고의 기술 미디어입니다.',
+    title,
+    description: siteDescription,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description: siteDescription,
+      url: canonical,
+      siteName: siteTitle,
+      locale: 'ko_KR',
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: siteTitle }],
+    },
+    robots: page > 1
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
   };
 }
 
@@ -170,7 +188,7 @@ export default async function Home({
       {/* Hero Spotlight Section */}
       {heroArticle && currentPage === 1 ? (
         <section className="mb-24 grid grid-cols-1 gap-16 lg:grid-cols-12 items-start">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 min-w-0 overflow-hidden">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-8 h-px bg-primary" />
               <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary">Spotlight Intelligence</h2>
@@ -178,7 +196,7 @@ export default async function Home({
             <NewsCard article={{ ...heroArticle.article, category: heroArticle.category }} priority />
           </div>
 
-          <div className="lg:col-span-4 lg:sticky lg:top-32">
+          <div className="lg:col-span-4 min-w-0 lg:sticky lg:top-32">
             <div className="flex items-center justify-between mb-8 border-b border-primary/20 pb-4">
               <h2 className="text-xs font-black uppercase tracking-[0.4em] text-foreground">Latest Briefing</h2>
               <TrendingUp className="w-4 h-4 text-primary" />

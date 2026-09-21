@@ -295,19 +295,20 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
       />
       
       {(formData.thumbnailKey || isEditing) && (
-        <div className="relative aspect-video mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl group/thumb bg-muted/30">
+        <div className="relative mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl group/thumb bg-muted/30">
           {formData.thumbnailKey ? (
             <>
-              <Image 
+              <Image
                 src={(() => {
                   const rawUrl = (formData.thumbnailKey || '').trim();
                   if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
                   if (rawUrl.startsWith('http')) return rawUrl;
                   return `/api/assets/${rawUrl}`;
-                })()} 
-                alt={formData.title} 
-                fill 
-                className="object-cover" 
+                })()}
+                alt={formData.title}
+                width={1600}
+                height={900}
+                className="w-full h-auto max-h-[min(70vh,720px)] object-contain"
                 priority
                 unoptimized={true}
               />
@@ -369,7 +370,7 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
             </Suspense>
           </div>
         ) : (
-          <div className="prose prose-lg prose-zinc max-w-none w-full break-all break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">
+          <div className="prose prose-lg prose-zinc max-w-none w-full min-w-0 overflow-x-hidden break-words whitespace-pre-line prose-headings:font-black prose-headings:tracking-tighter prose-headings:italic prose-p:leading-relaxed prose-img:max-w-full prose-img:h-auto prose-img:rounded-[2.5rem] prose-img:shadow-2xl prose-img:mx-auto">
             <Markdown content={formData.content} />
           </div>
         )}

@@ -43,13 +43,13 @@ export default function NewsCard({ article, priority, compact, horizontal }: New
 
   if (horizontal) {
     return (
-      <div className="group flex gap-4 py-4 border-b border-muted transition-all">
+      <div className="group flex gap-4 py-4 border-b border-muted transition-all min-w-0">
         {imageUrl && (
           <Link href={`/articles/${article.slug}`} className="block w-24 h-24 shrink-0 overflow-hidden rounded-xl bg-muted">
-            <Image src={imageUrl} alt={article.title} width={96} height={96} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" unoptimized />
+            <Image src={imageUrl} alt={article.title} width={96} height={96} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" unoptimized />
           </Link>
         )}
-        <div className="flex flex-col justify-center gap-1.5 ml-8">
+        <div className="flex flex-col justify-center gap-1.5 min-w-0 flex-1">
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary">{article.category?.name || 'TECH'}</span>
           <Link href={`/articles/${article.slug}`}>
             <h4 className="text-base font-black leading-tight tracking-tight group-hover:text-primary transition-colors line-clamp-2 italic">
@@ -66,24 +66,39 @@ export default function NewsCard({ article, priority, compact, horizontal }: New
   }
 
   return (
-    <div className={`group relative flex flex-col gap-5 ${priority ? 'lg:gap-8' : 'gap-4'} transition-all`}>
+    <div className={`group relative flex flex-col gap-5 min-w-0 ${priority ? 'lg:gap-8' : 'gap-4'} transition-all`}>
       {imageUrl && (
-        <Link href={`/articles/${article.slug}`} className="block overflow-hidden rounded-[2rem] shadow-2xl shadow-primary/5">
-          <div className={`${priority ? 'aspect-[21/10]' : 'aspect-video'} bg-muted relative overflow-hidden`}>
-            <Image 
-              src={imageUrl} 
-              alt={article.title} 
-              fill 
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              priority={priority}
-              unoptimized={true}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-8">
-              <span className="text-white text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2">
-                Read Intel <ArrowRight className="w-3 h-3" />
-              </span>
+        <Link href={`/articles/${article.slug}`} className="block w-full max-w-full overflow-hidden rounded-[2rem] shadow-2xl shadow-primary/5 bg-muted">
+          {priority ? (
+            <div className="relative w-full overflow-hidden">
+              <Image
+                src={imageUrl}
+                alt={article.title}
+                width={1600}
+                height={900}
+                sizes="(max-width: 1024px) 100vw, 66vw"
+                className="w-full h-auto max-h-[min(70vh,720px)] object-contain"
+                priority
+                unoptimized
+              />
             </div>
-          </div>
+          ) : (
+            <div className="aspect-video bg-muted relative overflow-hidden">
+              <Image
+                src={imageUrl}
+                alt={article.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-contain"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-8">
+                <span className="text-white text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2">
+                  Read Intel <ArrowRight className="w-3 h-3" />
+                </span>
+              </div>
+            </div>
+          )}
         </Link>
       )}
       

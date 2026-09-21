@@ -210,37 +210,18 @@ export default function AdminPage() {
             return;
           }
 
-          // 목표 비율 16:9
-          const targetRatio = 16 / 9;
-          let sourceWidth = img.width;
-          let sourceHeight = img.height;
-          let sourceX = 0;
-          let sourceY = 0;
-
-          // 크롭 계산 (Center Crop)
-          if (sourceWidth / sourceHeight > targetRatio) {
-            // 원본이 더 와이드함 -> 좌우를 자름
-            const newWidth = sourceHeight * targetRatio;
-            sourceX = (sourceWidth - newWidth) / 2;
-            sourceWidth = newWidth;
-          } else {
-            // 원본이 더 세로로 김 -> 상하를 자름
-            const newHeight = sourceWidth / targetRatio;
-            sourceY = (sourceHeight - newHeight) / 2;
-            sourceHeight = newHeight;
-          }
-
-          // 리사이징 해상도 결정 (가로 최대 1280px)
-          const outputWidth = Math.min(1280, sourceWidth);
-          const outputHeight = outputWidth / targetRatio;
+          // 원본 비율 유지 + 가로 최대 1600px (센터 크롭 없음 → 삽입 그래픽 잘림 방지)
+          const maxWidth = 1600;
+          const scale = Math.min(1, maxWidth / img.width);
+          const outputWidth = Math.round(img.width * scale);
+          const outputHeight = Math.round(img.height * scale);
 
           canvas.width = outputWidth;
           canvas.height = outputHeight;
 
-          // 고화질 드로잉
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight);
+          ctx.drawImage(img, 0, 0, outputWidth, outputHeight);
 
           // WebP 변환
           canvas.toBlob((blob) => {
@@ -488,7 +469,7 @@ export default function AdminPage() {
                 <img 
                   src={thumbnailPreview.startsWith('//') ? `https:${thumbnailPreview}` : thumbnailPreview} 
                   alt="Thumbnail Preview" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-muted"
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                    <label className="cursor-pointer p-3 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-sm transition-colors">

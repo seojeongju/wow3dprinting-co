@@ -60,12 +60,12 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
       Image.configure({
         allowBase64: true,
         HTMLAttributes: {
-          class: 'rounded-[2.5rem] shadow-2xl mx-auto my-12 border-8 border-white ring-1 ring-black/5 hover:scale-[1.02] transition-transform duration-500',
+          class: 'max-w-full w-auto h-auto rounded-[2.5rem] shadow-2xl mx-auto my-12 border-8 border-white ring-1 ring-black/5 hover:scale-[1.02] transition-transform duration-500',
         },
       }),
       Video.configure({
         HTMLAttributes: {
-          class: 'rounded-[2.5rem] shadow-2xl mx-auto my-12 border-8 border-white ring-1 ring-black/5',
+          class: 'max-w-full w-full h-auto rounded-[2.5rem] shadow-2xl mx-auto my-12 border-8 border-white ring-1 ring-black/5',
         },
       }),
       TextAlign.configure({
@@ -221,7 +221,7 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
             </div>
           </BubbleMenu>
         )}
-        <div className="p-10 md:p-20 min-h-[800px] prose prose-lg prose-zinc max-w-none focus:outline-none bg-gray-50/10">
+        <div className="p-10 md:p-20 min-h-[800px] prose prose-lg prose-zinc max-w-none min-w-0 overflow-x-hidden focus:outline-none bg-gray-50/10 [&_img]:max-w-full [&_img]:h-auto [&_img]:w-auto [&_video]:max-w-full">
           <EditorContent editor={editor} className="min-h-[600px] outline-none" />
         </div>
       </div>
