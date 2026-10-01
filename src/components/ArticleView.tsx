@@ -2,6 +2,8 @@ import ServerMarkdown from '@/components/ServerMarkdown';
 import { format } from 'date-fns';
 import { toValidDate } from '@/lib/seo';
 
+import InteractiveArticleImage from '@/components/InteractiveArticleImage';
+
 interface ArticleViewProps {
   article: {
     title: string;
@@ -68,12 +70,11 @@ export default function ArticleView({ article, category }: ArticleViewProps) {
       </header>
 
       {imageSrc ? (
-        <div className="relative mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl bg-muted/30">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="mb-12">
+          <InteractiveArticleImage
             src={imageSrc}
             alt={article.title}
-            className="w-full h-auto max-h-[min(70vh,720px)] object-contain"
+            priority
           />
         </div>
       ) : null}

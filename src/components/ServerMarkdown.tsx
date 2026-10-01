@@ -1,3 +1,5 @@
+import ArticleContentContainer from '@/components/ArticleContentContainer';
+
 interface ServerMarkdownProps {
   content: string;
 }
@@ -86,9 +88,11 @@ export default function ServerMarkdown({ content }: ServerMarkdownProps) {
   const html = looksLikeHtml(value) ? value : markdownToHtml(value);
 
   return (
-    <div
-      className="prose prose-zinc dark:prose-invert max-w-none w-full min-w-0 overflow-x-hidden break-words prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:max-w-full prose-img:h-auto prose-img:rounded-[2.5rem] prose-img:shadow-2xl [&_img]:max-w-full [&_img]:h-auto"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <ArticleContentContainer>
+      <div
+        className="prose prose-zinc dark:prose-invert max-w-none w-full min-w-0 overflow-x-hidden break-words prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-p:text-lg prose-img:max-w-full prose-img:h-auto prose-img:rounded-[2.5rem] prose-img:shadow-2xl [&_img]:max-w-full [&_img]:h-auto [&_img]:mx-auto [&_img]:my-8"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </ArticleContentContainer>
   );
 }

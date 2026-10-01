@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import Markdown from '@/components/Markdown';
 import dynamic from 'next/dynamic';
+import InteractiveArticleImage from '@/components/InteractiveArticleImage';
 
 const TiptapEditor = dynamic(() => import('@/components/TiptapEditor'), { 
   ssr: false,
@@ -295,10 +296,40 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
       />
       
       {(formData.thumbnailKey || isEditing) && (
-        <div className="relative mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl group/thumb bg-muted/30">
+        <div className="mb-12">
           {formData.thumbnailKey ? (
-            <>
-              <Image
+            isEditing ? (
+              <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl group/thumb bg-muted/30">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={(() => {
+                    const rawUrl = (formData.thumbnailKey || '').trim();
+                    if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+                    if (rawUrl.startsWith('http')) return rawUrl;
+                    return `/api/assets/${rawUrl}`;
+                  })()}
+                  alt={formData.title}
+                  className="w-full h-auto block rounded-[2.5rem] object-contain"
+                />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity gap-4 shadow-inner">
+                  <button 
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    className="p-3 bg-white text-black rounded-full hover:scale-110 transition-transform shadow-lg"
+                    title="이미지 교체"
+                  >
+                    <Edit3 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => setFormData(prev => ({ ...prev, thumbnailKey: null }))}
+                    className="p-3 bg-destructive text-white rounded-full hover:scale-110 transition-transform shadow-lg"
+                    title="이미지 삭제"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <InteractiveArticleImage
                 src={(() => {
                   const rawUrl = (formData.thumbnailKey || '').trim();
                   if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
@@ -306,31 +337,11 @@ export default function ArticleEditor({ article, category, isAdmin }: ArticleEdi
                   return `/api/assets/${rawUrl}`;
                 })()}
                 alt={formData.title}
-                width={1600}
-                height={900}
-                className="w-full h-auto max-h-[min(70vh,720px)] object-contain"
                 priority
-                unoptimized={true}
               />
-              {isEditing && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity gap-4 shadow-inner">
-                  <button 
-                    onClick={() => thumbnailInputRef.current?.click()}
-                    className="p-3 bg-white text-black rounded-full hover:scale-110 transition-transform shadow-lg"
-                  >
-                    <Edit3 className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={() => setFormData(prev => ({ ...prev, thumbnailKey: null }))}
-                    className="p-3 bg-destructive text-white rounded-full hover:scale-110 transition-transform shadow-lg"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-            </>
+            )
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center border-4 border-dashed border-muted-foreground/10 rounded-[2.5rem]">
+            <div className="w-full min-h-[220px] flex flex-col items-center justify-center border-4 border-dashed border-muted-foreground/10 rounded-[2.5rem] p-8">
               <button 
                 onClick={() => thumbnailInputRef.current?.click()}
                 className="flex flex-col items-center gap-4 text-muted-foreground hover:text-primary transition-colors"
